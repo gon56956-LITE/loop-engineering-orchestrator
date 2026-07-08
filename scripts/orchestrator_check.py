@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import sys
+import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -18,6 +19,13 @@ TERMINAL_STATES = {
 RECOVERY_STATES = {"suspended_by_transport", "resume_pending", "recovery_review"}
 RELEASED_STATUSES = {"released", "closed", "carried_forward"}
 FORBIDDEN_EFFORTS = {"low", "light"}
+APPROVED_CUSTOM_AGENTS = {
+    "handoff-steward",
+    "evidence-analyst",
+    "reviewer",
+    "visual-producer",
+    "visual-skill-maintainer",
+}
 QUEUE_NAMES = [
     "specialist_requests.jsonl",
     "specialist_responses.jsonl",
@@ -71,6 +79,31 @@ def newest_mtime(paths):
             newest = m if newest is None or m > newest else newest
     return newest
 
+def inspect_custom_agents(state):
+    policy = state.get("custom_agent_policy", {})
+    approved = set(policy.get("approved_custom_agents", [])) or APPROVED_CUSTOM_AGENTS
+    agent_dir = policy.get("authoritative_agent_dir", "~/.codex/agents")
+    root = Path(agent_dir).expanduser()
+    findings = {}
+    for name in sorted(approved):
+        path = root / f"{name}.toml"
+        if not path.exists():
+            findings[name] = "missing"
+            continue
+        try:
+            data = path.read_bytes()
+            if data.startswith(b"\xef\xbb\xbf"):
+                findings[name] = "bom_present"
+                continue
+            parsed = tomllib.loads(data.decode("utf-8"))
+            if parsed.get("name") != name:
+                findings[name] = f"name_mismatch:{parsed.get('name')}"
+            else:
+                findings[name] = "ok"
+        except Exception as exc:
+            findings[name] = f"parse_error:{exc}"
+    return approved, findings
+
 def fmt_age(value):
     return "unknown" if value is None else f"{value:.1f}"
 
@@ -83,6 +116,7 @@ def main():
     heartbeat = float(state.get("heartbeat_minutes", 10))
     effort_policy = state.get("effort_policy", {})
     persistent_agents = state.get("persistent_agents", ["main-agent", "handoff-steward"])
+    approved_custom_agents, custom_agent_findings = inspect_custom_agents(state)
     now = datetime.now(timezone.utc)
     print("# Loop Orchestrator Dashboard")
     print(f"root: {root}")
@@ -105,6 +139,7 @@ def main():
     model_downgrade = []
     bad_persistent_lifecycle = []
     terminal_wave_agent_without_release = []
+    unapproved_custom_agents = []
     for path in agents:
         data = read_json(path)
         silent_until = parse_time(data.get("silent_window_until"))
@@ -147,6 +182,8 @@ def main():
         if path.stem in persistent_agents and data.get("lifecycle") != "persistent":
             bad_persistent_lifecycle.append(path.stem)
         custom_agent = data.get("custom_agent", "")
+        if custom_agent and custom_agent != "main-agent" and custom_agent not in approved_custom_agents:
+            unapproved_custom_agents.append(f"{path.stem}:{custom_agent}")
         lifecycle = data.get("lifecycle", "")
         wave_id = data.get("wave_id", "")
         subwave_id = data.get("subwave_id", "")
@@ -155,6 +192,10 @@ def main():
             if str(release_status).lower() not in RELEASED_STATUSES:
                 terminal_wave_agent_without_release.append(path.stem)
         print(f"- {path.stem}: health={health}; state={state_name}; role={role}; custom_agent={custom_agent}; lifecycle={lifecycle}; wave={wave_id}; subwave={subwave_id}; release={release_status}; profile={profile}; effort={effort}; latest_age_min={fmt_age(latest_age)}; next={data.get('next_step','')}")
+    print("")
+    print("## Custom Agent Configs")
+    for name, result in custom_agent_findings.items():
+        print(f"- {name}: {result}")
     print("")
     print("## Reasoning Effort")
     if effort_counts:
@@ -206,6 +247,13 @@ def main():
         warnings.append(f"persistent_agent_wrong_lifecycle: {', '.join(bad_persistent_lifecycle)}")
     if terminal_wave_agent_without_release:
         warnings.append(f"terminal_wave_agent_without_release_status: {', '.join(terminal_wave_agent_without_release)}")
+    missing_or_invalid_custom_agents = [
+        f"{name}:{result}" for name, result in custom_agent_findings.items() if result != "ok"
+    ]
+    if missing_or_invalid_custom_agents:
+        warnings.append(f"custom_agent_config_not_ready: {', '.join(missing_or_invalid_custom_agents)}")
+    if unapproved_custom_agents:
+        warnings.append(f"unapproved_custom_agent_in_status: {', '.join(unapproved_custom_agents)}")
     for folder in ["workflows", "figures", "semantic"]:
         candidate = root.parent / folder
         if candidate.exists():

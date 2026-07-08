@@ -15,6 +15,18 @@ DEFAULT_STATE = {
     "intervene_after_missed": 3,
     "profiles": [],
     "persistent_agents": ["main-agent", "handoff-steward"],
+    "custom_agent_policy": {
+        "authoritative_agent_dir": "~/.codex/agents",
+        "approved_custom_agents": [
+            "handoff-steward",
+            "evidence-analyst",
+            "reviewer",
+            "visual-producer",
+            "visual-skill-maintainer",
+        ],
+        "shadow_skill_subagents_allowed": False,
+        "fallback_requires_user_authorization": True,
+    },
     "wave_policy": {
         "wave0_required": True,
         "gate_after_each_formal_wave": True,
@@ -91,10 +103,14 @@ def initial_content(name):
             "",
             "## Wave-Scoped Custom Agents",
             "",
+            "Authoritative role definitions live in `C:\\Users\\gon56956\\.codex\\agents`. Do not define shadow subagents in the skill.",
+            "",
             "- evidence-analyst: source-bound evidence execution",
             "- reviewer: independent review, test, and QA",
             "- visual-producer: one-off visual deliverables",
             "- visual-skill-maintainer: reusable visual skill/tool maintenance",
+            "",
+            "If a custom agent is missing, record a control gap and block the spawn unless the user explicitly authorizes a one-off fallback packet.",
             "",
             "## Reserved Rework Capacity",
             "",
@@ -270,6 +286,7 @@ def main():
         data = json.loads(state.read_text(encoding="utf-8"))
         data.setdefault("profiles", [])
         data.setdefault("persistent_agents", DEFAULT_STATE["persistent_agents"])
+        data.setdefault("custom_agent_policy", DEFAULT_STATE["custom_agent_policy"])
         data.setdefault("wave_policy", DEFAULT_STATE["wave_policy"])
         data.setdefault("effort_policy", DEFAULT_STATE["effort_policy"])
         data.setdefault("integration_policy", DEFAULT_STATE["integration_policy"])

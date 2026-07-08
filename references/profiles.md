@@ -11,12 +11,13 @@ Default reasoning effort: inherit the main agent's effort. Use `medium` only for
 Default gates:
 
 - Source inventory gate
+- Internal structure/depth gate
 - Claim trace gate
 - Conflict/gap gate
 - Confidence gate
 - Readability gate
 
-Acceptance requires source references for strong claims and explicit inference labels.
+Acceptance requires source references for strong claims, explicit inference labels, and a below-surface inspection of multi-layer artifacts when nested structure or algorithm logic may affect the answer.
 
 ## code_implementation
 

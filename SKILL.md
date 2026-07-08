@@ -23,7 +23,7 @@ A successful loop has six durable surfaces:
 
 ## Custom Agent Roster
 
-Use custom agents from `C:\Users\gon56956\.codex\agents` when spawning subagents:
+Use custom agents from `C:\Users\gon56956\.codex\agents` when spawning subagents. These TOML files are the authoritative role definitions; this skill only routes work to them and adds loop-level controls. Do not define shadow subagents inside the skill.
 
 - `handoff-steward`: persistent loop checkpoint and continuity agent. Keep active from loop start through final handoff. Use for accepted-vs-unresolved state, stop states, authorization boundaries, current artifact paths, next-action queues, and startup prompts. Do not use it as the reviewer or primary analyst.
 - `evidence-analyst`: wave-scoped execution agent for source-bound technical evidence work across PDFs, WI/docs, HTML/Markdown, CSV/XLSX, .cal files, logs, configs, recipes, test outputs, and source-code tracing.
@@ -31,7 +31,7 @@ Use custom agents from `C:\Users\gon56956\.codex\agents` when spawning subagents
 - `visual-producer`: wave-scoped execution agent for one-off charts, diagrams, PPT/PPTX, HTML slide decks, PNG posts, image batches, visual reports, and presentation-ready artifacts.
 - `visual-skill-maintainer`: wave-scoped specialist for modifying reusable visual generation skills, renderers, recipes, palettes, fixtures, galleries, tests, and release flows.
 
-If a needed custom agent is unavailable, emulate the role in a normal work packet and record the missing agent as a control gap.
+If a needed custom agent is unavailable, do not silently emulate it. Record the missing agent as a control gap and block spawning that role unless the user explicitly authorizes a one-off fallback packet.
 
 ## Task Profiles
 
@@ -148,11 +148,24 @@ Every WaveN must reserve:
 - review/test agents for acceptance checks
 - rework agents or backup owners for fixes after review
 
+For broad research with many topics, split work by topic or source family and assign parallel evidence packets plus parallel reviewer packets. Do not rely on one human review pass to discover shallow analysis across many topics. Review packets should check depth, source coverage, and internal-logic trace for the same topic boundary as the evidence packet.
+
+When the topic class is new, the source structure is unfamiliar, or prior analyst output was too shallow, run one calibration packet before scaling parallel work. The calibration packet must produce a depth trace and mechanism narrative, pass reviewer explain-back, and become the packet template for the remaining topics. Do not launch a large parallel wave from an unproven shallow packet shape.
+
+For each evidence packet over multi-layer files, include a depth contract:
+
+- map outer file structure and relevant inner structures
+- trace source fields or inputs through transformations, algorithms, formulas, recipes, code paths, or log phases to outputs
+- identify uninspected lower layers as explicit gaps
+- require a reviewer to check depth before acceptance
+
 Each work packet should include:
 
 - `packet_id`, `wave_id`, optional `subwave_id`, role, custom agent type, owner, reviewer, rework owner, status path, and owned artifact path.
 - Mission question, in-scope sources, out-of-scope sources, and hard constraints.
 - Expected output shape, claim-trace obligations, acceptance gates, and rework route.
+- Depth contract for multi-layer artifacts, including required internal structure map and input -> transformation -> output trace.
+- Mechanism narrative requirement for research-like work: explain the mechanism in natural human language after the trace, not as raw extraction notes.
 - Inherited model/effort policy, allowed downgrade only to `medium` for simple bounded work, escalation triggers, concurrency notes, and silent-window expectations.
 - Dependencies on earlier packets, specialist requests, visual tasks, or user decisions.
 
@@ -236,8 +249,10 @@ Map gates to the task profile:
 
 - Evidence/source gate: every strong claim has a source or is labeled inference.
 - Trace/logic gate: inputs, transformations, outputs, and claims form a coherent chain.
+- Internal-structure gate: multi-layer files were inspected below the surface layer, and algorithm/control-flow claims include source-backed mechanisms.
 - Accuracy/math/test gate: calculations, code, tests, thresholds, and comparisons are correct.
-- Depth gate: the work answers the relevant why/how/what/when/where/who questions.
+- Analysis-depth gate: the work answers the relevant why/how/what/when/where/who questions.
+- Explain-back gate: a technical human can reconstruct the mechanism, evidence chain, limitations, and practical meaning from the narrative without reading raw extraction notes.
 - Readability/usefulness gate: the target audience can use the result.
 - Artifact gate: files open, links resolve, diagrams/charts render, outputs are complete.
 

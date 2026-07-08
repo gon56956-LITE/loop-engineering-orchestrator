@@ -40,7 +40,7 @@ Effort policy:
 
 ## Custom Agents
 
-The skill expects these local custom agents under `C:\Users\gon56956\.codex\agents` when available:
+The skill expects these local custom agents under `C:\Users\gon56956\.codex\agents`. Those TOML files are the authoritative role definitions; the skill should route to them, not maintain looser duplicate subagent definitions:
 
 - `handoff-steward`
 - `evidence-analyst`
@@ -48,7 +48,7 @@ The skill expects these local custom agents under `C:\Users\gon56956\.codex\agen
 - `visual-producer`
 - `visual-skill-maintainer`
 
-If a custom agent is missing, emulate the role in a normal work packet and record the gap.
+If a custom agent is missing, record a control gap and block that spawn unless the user explicitly authorizes a one-off fallback packet.
 
 ## Quick Start
 
