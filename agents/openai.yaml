@@ -1,0 +1,4 @@
+interface:
+  display_name: "Loop Engineering Orchestrator"
+  short_description: "Coordinate wave-gated multi-agent loops"
+  default_prompt: "Use $loop-engineering-orchestrator to set up a durable agent_work loop with persistent handoff-steward support, Wave0/Gate0 discovery, WaveN/GateN planning, subwave closeouts, custom subagent routing, review/rework ownership, integration gates, and handoff files."
