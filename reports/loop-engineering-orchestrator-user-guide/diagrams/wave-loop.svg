@@ -1,0 +1,214 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2322" height="1784" viewBox="0 0 2322 1784" role="img" data-style-id="modern-tech" aria-label="一次完整 Wave Loop 怎么运行">
+<defs>
+<marker id="arrow-sequence" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,4 L0,8 z" fill="#334155"/></marker>
+<marker id="arrow-conditional" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,4 L0,8 z" fill="#2563EB"/></marker>
+<marker id="arrow-exception" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,4 L0,8 z" fill="#F97316"/></marker>
+<marker id="arrow-parallel" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,4 L0,8 z" fill="#2563EB"/></marker>
+<filter id="modern-tech-soft-shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#0F172A" flood-opacity="0.1"/></filter>
+</defs>
+<rect x="0" y="0" width="2322" height="1784" fill="#F8FBFF"/>
+<text x="56" y="32" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="32" font-weight="700" fill="#0F172A">一次完整 Wave Loop 怎么运行</text>
+<text x="56" y="56" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#475569">展示从准备、执行、审查、返工到最终整合的完整闭环。</text>
+<rect data-lane-id="user" x="56" y="126" width="442" height="1624" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1"/>
+<rect x="56" y="126" width="442" height="58" fill="#EEF6FF" stroke="#CBD5E1" stroke-width="1.1"/>
+<g data-lane-icon-for="user" data-icon-name="user">
+<circle cx="253.00" cy="151.48" r="3.74" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 247.28 161.60 C 249.48 156.76, 256.52 156.76, 258.72 161.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="293.0" y="155.0" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A">用户</text>
+<rect data-lane-id="main-agent" x="498" y="126" width="442" height="1624" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1"/>
+<rect x="498" y="126" width="442" height="58" fill="#EEF6FF" stroke="#CBD5E1" stroke-width="1.1"/>
+<g data-lane-icon-for="main-agent" data-icon-name="chart">
+<path d="M 666.16 162.48 L 666.16 155.44" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 671.00 162.48 L 671.00 150.16" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 675.84 162.48 L 675.84 145.32" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="735.0" y="155.0" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A">主 agent</text>
+<rect data-lane-id="workers" x="940" y="126" width="442" height="1624" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1"/>
+<rect x="940" y="126" width="442" height="58" fill="#EEF6FF" stroke="#CBD5E1" stroke-width="1.1"/>
+<g data-lane-icon-for="workers" data-icon-name="chart">
+<path d="M 1093.15 162.48 L 1093.15 155.44" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1097.99 162.48 L 1097.99 150.16" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1102.83 162.48 L 1102.83 145.32" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="1177.0" y="155.0" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A">执行 agents</text>
+<rect data-lane-id="reviewers" x="1382" y="126" width="442" height="1624" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1"/>
+<rect x="1382" y="126" width="442" height="58" fill="#EEF6FF" stroke="#CBD5E1" stroke-width="1.1"/>
+<g data-lane-icon-for="reviewers" data-icon-name="chart">
+<path d="M 1521.09 162.48 L 1521.09 155.44" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1525.93 162.48 L 1525.93 150.16" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1530.77 162.48 L 1530.77 145.32" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="1619.0" y="155.0" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A">Review agents</text>
+<rect data-lane-id="handoff" x="1824" y="126" width="442" height="1624" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="1.1"/>
+<rect x="1824" y="126" width="442" height="58" fill="#EEF6FF" stroke="#CBD5E1" stroke-width="1.1"/>
+<g data-lane-icon-for="handoff" data-icon-name="chart">
+<path d="M 1952.07 162.48 L 1952.07 155.44" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1956.91 162.48 L 1956.91 150.16" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1961.75 162.48 L 1961.75 145.32" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="2061.0" y="155.0" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="19" font-weight="700" fill="#0F172A">Handoff steward</text>
+<path data-edge-id="start-to-initialize-control" data-edge-from="start" data-edge-to="initialize-control" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="277.0,262.0 277.0,297.0 719.0,297.0 719.0,332.0" d="M 277.0 262.0 L 277.0 287.0 Q 277.0 297.0 287.0 297.0 L 709.0 297.0 Q 719.0 297.0 719.0 307.0 L 719.0 332.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="initialize-control-to-wave-zero" data-edge-from="initialize-control" data-edge-to="wave-zero" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="719.0,390.0 719.0,460.0" d="M 719.0 390.0 L 719.0 460.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="wave-zero-to-gate-zero" data-edge-from="wave-zero" data-edge-to="gate-zero" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="719.0,518.0 719.0,588.0" d="M 719.0 518.0 L 719.0 588.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="gate-zero-to-assign-work" data-edge-from="gate-zero" data-edge-to="assign-work" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="719.0,646.0 719.0,716.0" d="M 719.0 646.0 L 719.0 716.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="assign-work-to-execute-packets" data-edge-from="assign-work" data-edge-to="execute-packets" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="719.0,774.0 719.0,809.0 1161.0,809.0 1161.0,844.0" d="M 719.0 774.0 L 719.0 799.0 Q 719.0 809.0 729.0 809.0 L 1151.0 809.0 Q 1161.0 809.0 1161.0 819.0 L 1161.0 844.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="execute-packets-to-rolling-review" data-edge-from="execute-packets" data-edge-to="rolling-review" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="1161.0,902.0 1161.0,937.0 1603.0,937.0 1603.0,972.0" d="M 1161.0 902.0 L 1161.0 927.0 Q 1161.0 937.0 1171.0 937.0 L 1593.0 937.0 Q 1603.0 937.0 1603.0 947.0 L 1603.0 972.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="rolling-review-to-review-result" data-edge-from="rolling-review" data-edge-to="review-result" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="1603.0,1020.0 1603.0,1090.0" d="M 1603.0 1020.0 L 1603.0 1090.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="review-result-to-owner-rework" data-edge-from="review-result" data-edge-to="owner-rework" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="1603.0,1202.0 1603.0,1242.0 1161.0,1242.0 1161.0,1272.0" d="M 1603.0 1202.0 L 1603.0 1232.0 Q 1603.0 1242.0 1593.0 1242.0 L 1171.0 1242.0 Q 1161.0 1242.0 1161.0 1252.0 L 1161.0 1272.0" fill="none" stroke="#2563EB" stroke-width="1.45" marker-end="url(#arrow-conditional)"/>
+<rect data-edge-label-bg-for="review-result-to-owner-rework" x="1504.2" y="1246.7" width="66.0" height="29.0" rx="3" fill="#F8FBFF"/>
+<text data-edge-label-for="review-result-to-owner-rework" data-edge-label-slot="branch" x="1565.2" y="1261.2" text-anchor="end" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#475569">需要修改</text>
+<path data-edge-id="owner-rework-to-rolling-review" data-edge-from="owner-rework" data-edge-to="rolling-review" data-edge-from-anchor="right" data-edge-to-anchor="right" data-route-points="1298.5,1301.0 1782.0,1301.0 1782.0,996.0 1740.0,996.0" d="M 1298.5 1301.0 L 1772.0 1301.0 Q 1782.0 1301.0 1782.0 1291.0 L 1782.0 1006.0 Q 1782.0 996.0 1772.0 996.0 L 1740.0 996.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="review-result-to-record-accepted" data-edge-from="review-result" data-edge-to="record-accepted" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="1615.0,1202.0 1615.0,1237.0 719.0,1237.0 719.0,1272.0" d="M 1615.0 1202.0 L 1615.0 1227.0 Q 1615.0 1237.0 1605.0 1237.0 L 729.0 1237.0 Q 719.0 1237.0 719.0 1247.0 L 719.0 1272.0" fill="none" stroke="#2563EB" stroke-width="1.45" marker-end="url(#arrow-conditional)"/>
+<rect data-edge-label-bg-for="review-result-to-record-accepted" x="1622.0" y="1212.0" width="38.0" height="29.0" rx="3" fill="#F8FBFF"/>
+<text data-edge-label-for="review-result-to-record-accepted" data-edge-label-slot="branch" x="1627.0" y="1226.5" text-anchor="start" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#475569">通过</text>
+<path data-edge-id="record-accepted-to-gate-n" data-edge-from="record-accepted" data-edge-to="gate-n" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="719.0,1330.0 719.0,1400.0" d="M 719.0 1330.0 L 719.0 1400.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="gate-n-to-handoff-update" data-edge-from="gate-n" data-edge-to="handoff-update" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="719.0,1458.0 719.0,1493.0 2045.0,1493.0 2045.0,1528.0" d="M 719.0 1458.0 L 719.0 1483.0 Q 719.0 1493.0 729.0 1493.0 L 2035.0 1493.0 Q 2045.0 1493.0 2045.0 1503.0 L 2045.0 1528.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<path data-edge-id="handoff-update-to-finish" data-edge-from="handoff-update" data-edge-to="finish" data-edge-from-anchor="bottom" data-edge-to-anchor="top" data-route-points="2045.0,1586.0 2045.0,1621.0 719.0,1621.0 719.0,1656.0" d="M 2045.0 1586.0 L 2045.0 1611.0 Q 2045.0 1621.0 2035.0 1621.0 L 729.0 1621.0 Q 719.0 1621.0 719.0 1631.0 L 719.0 1656.0" fill="none" stroke="#334155" stroke-width="1.45" marker-end="url(#arrow-sequence)"/>
+<g data-node-id="start" data-node-type="start" data-node-shape="pill">
+<rect x="157" y="218" width="240" height="44" rx="22.0" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.35" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="start" data-icon-name="alert">
+<circle cx="196.00" cy="240.00" r="11.50" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 196.00 232.50 L 196.00 242.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="196.00" cy="247.50" r="0.8" fill="#2563EB"/>
+</g>
+<text x="307.0" y="240.0" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">用户提出复杂任务</text>
+</g>
+<g data-node-id="initialize-control" data-node-type="task" data-node-shape="rect">
+<rect x="574" y="332" width="290" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="initialize-control" data-icon-name="activity">
+<path d="M 605.80 356.20 L 614.20 361.00 L 606.40 367.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="605.80" cy="356.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="614.20" cy="361.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="606.40" cy="367.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 614.20 361.00 L 621.40 361.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="749.0" y="349.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">建立 agent_work 和计</text>
+<text x="749.0" y="372.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">划文件</text>
+</g>
+<g data-node-id="wave-zero" data-node-type="task" data-node-shape="rect">
+<rect x="578" y="460" width="282" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="wave-zero" data-icon-name="activity">
+<path d="M 609.80 484.20 L 618.20 489.00 L 610.40 495.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="609.80" cy="484.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="618.20" cy="489.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="610.40" cy="495.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 618.20 489.00 L 625.40 489.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="749.0" y="477.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">Wave0 先摸清边界和资</text>
+<text x="749.0" y="500.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">料</text>
+</g>
+<g data-node-id="gate-zero" data-node-type="task" data-node-shape="rect">
+<rect x="578" y="588" width="282" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="gate-zero" data-icon-name="activity">
+<path d="M 609.80 612.20 L 618.20 617.00 L 610.40 623.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="609.80" cy="612.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="618.20" cy="617.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="610.40" cy="623.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 618.20 617.00 L 625.40 617.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="749.0" y="605.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">Gate0 确认范围和工作</text>
+<text x="749.0" y="628.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">包</text>
+</g>
+<g data-node-id="assign-work" data-node-type="task" data-node-shape="rect">
+<rect x="582" y="716" width="274" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="assign-work" data-icon-name="activity">
+<path d="M 613.80 740.20 L 622.20 745.00 L 614.40 751.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="613.80" cy="740.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="622.20" cy="745.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="614.40" cy="751.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 622.20 745.00 L 629.40 745.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="749.0" y="733.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">分派执行、审查和返工</text>
+<text x="749.0" y="756.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">角色</text>
+</g>
+<g data-node-id="execute-packets" data-node-type="task" data-node-shape="rect">
+<rect x="1018.5" y="844" width="285" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="execute-packets" data-icon-name="activity">
+<path d="M 1050.30 868.20 L 1058.70 873.00 L 1050.90 879.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1050.30" cy="868.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1058.70" cy="873.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1050.90" cy="879.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1058.70 873.00 L 1065.90 873.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="1191.0" y="861.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">执行 agents 完成各自</text>
+<text x="1191.0" y="884.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">工作</text>
+</g>
+<g data-node-id="rolling-review" data-node-type="task" data-node-shape="rect">
+<rect x="1466" y="972" width="274" height="48" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="rolling-review" data-icon-name="activity">
+<path d="M 1497.80 991.20 L 1506.20 996.00 L 1498.40 1002.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1497.80" cy="991.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1506.20" cy="996.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1498.40" cy="1002.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1506.20 996.00 L 1513.40 996.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="1633.0" y="996.0" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">完成一个包就立即审查</text>
+</g>
+<g data-node-id="review-result" data-node-type="decision" data-node-shape="diamond">
+<path d="M 1597.08 1093.73 Q 1603.0 1090 1608.92 1093.73 L 1686.08 1142.27 Q 1692 1146.0 1686.08 1149.73 L 1608.92 1198.27 Q 1603.0 1202 1597.08 1198.27 L 1519.92 1149.73 Q 1514 1146.0 1519.92 1142.27 L 1597.08 1093.73 Z" fill="#ECFEFF" stroke="#06B6D4" stroke-width="1.5" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="review-result" data-icon-name="question">
+<circle cx="1603.00" cy="1117.00" r="10.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1600.36 1114.36 C 1601.24 1111.28, 1607.40 1112.16, 1606.08 1116.56 C 1605.20 1118.76, 1603.00 1118.32, 1603.00 1120.96" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1603.00" cy="1123.60" r="0.8" fill="#2563EB"/>
+</g>
+<text x="1603.0" y="1156.0" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">审查是否通过？</text>
+</g>
+<g data-node-id="owner-rework" data-node-type="task" data-node-shape="rect">
+<rect x="1023.5" y="1272" width="275" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="owner-rework" data-icon-name="activity">
+<path d="M 1055.30 1296.20 L 1063.70 1301.00 L 1055.90 1307.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1055.30" cy="1296.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1063.70" cy="1301.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1055.90" cy="1307.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1063.70 1301.00 L 1070.90 1301.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="1191.0" y="1289.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">原 owner 返工，不由</text>
+<text x="1191.0" y="1312.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">主 agent 代修</text>
+</g>
+<g data-node-id="record-accepted" data-node-type="task" data-node-shape="rect">
+<rect x="582" y="1272" width="274" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="record-accepted" data-icon-name="activity">
+<path d="M 613.80 1296.20 L 622.20 1301.00 L 614.40 1307.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="613.80" cy="1296.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="622.20" cy="1301.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="614.40" cy="1307.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 622.20 1301.00 L 629.40 1301.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="749.0" y="1289.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">记录已接受成果和证据</text>
+<text x="749.0" y="1312.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">链</text>
+</g>
+<g data-node-id="gate-n" data-node-type="task" data-node-shape="rect">
+<rect x="578" y="1400" width="282" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="gate-n" data-icon-name="activity">
+<path d="M 609.80 1424.20 L 618.20 1429.00 L 610.40 1435.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="609.80" cy="1424.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="618.20" cy="1429.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="610.40" cy="1435.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 618.20 1429.00 L 625.40 1429.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="749.0" y="1417.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">GateN 统一裁决本轮结</text>
+<text x="749.0" y="1440.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">果</text>
+</g>
+<g data-node-id="handoff-update" data-node-type="task" data-node-shape="rect">
+<rect x="1902.5" y="1528" width="285" height="58" rx="13" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.3" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="handoff-update" data-icon-name="activity">
+<path d="M 1934.30 1552.20 L 1942.70 1557.00 L 1934.90 1563.60" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1934.30" cy="1552.20" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1942.70" cy="1557.00" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<circle cx="1934.90" cy="1563.60" r="2.25" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 1942.70 1557.00 L 1949.90 1557.00" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="2075.0" y="1545.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">更新 handoff，方便续</text>
+<text x="2075.0" y="1568.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">接</text>
+</g>
+<g data-node-id="finish" data-node-type="end" data-node-shape="pill">
+<rect x="582" y="1656" width="274" height="60" rx="30.0" fill="#FFFFFF" stroke="#2563EB" stroke-width="1.35" filter="url(#modern-tech-soft-shadow)"/>
+<g data-node-icon-for="finish" data-icon-name="check">
+<circle cx="621.00" cy="1686.00" r="11.50" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 615.50 1686.00 L 619.50 1689.50 L 627.00 1682.50" fill="none" stroke="#2563EB" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text x="749.0" y="1674.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">可以进入下一轮或最终</text>
+<text x="749.0" y="1697.5" text-anchor="middle" dominant-baseline="middle" font-family="Aptos, Segoe UI, Inter, Arial, sans-serif" font-size="17" fill="#0F172A" font-weight="700">报告</text>
+</g>
+</svg>

@@ -1,0 +1,186 @@
+version: workflow-contract/v1
+title: 遇到疑点或缺资料时怎么处理
+summary: 说明系统如何继续追问、何时停止返工，以及怎样把缺失资料暴露给用户。
+scope:
+  in:
+  - 解释 gap ledger、source request 和有界返工
+  - 避免把没有证据的内容写成结论
+  out:
+  - 不承诺任何缺失资料都能自动找到
+actors:
+- id: analyst
+  label: Evidence analyst
+  type: system
+- id: reviewer
+  label: Reviewer
+  type: system
+- id: main-agent
+  label: 主 agent
+  type: system
+- id: user
+  label: 用户
+  type: person
+artifacts:
+- id: claim
+  label: 重要结论
+  type: output
+- id: gap-ledger
+  label: gap_ledger.md
+  type: document
+- id: source-request
+  label: source_requests.jsonl
+  type: document
+nodes:
+- id: start
+  label: 分析重要结论
+  type: start
+  actor: analyst
+  inputs:
+  - claim
+  outputs: []
+- id: trace-source-chain
+  label: 追查证据来源链
+  type: task
+  actor: analyst
+  inputs: []
+  outputs: []
+- id: chain-complete
+  label: 证据链是否闭合？
+  type: decision
+  actor: analyst
+  inputs: []
+  outputs: []
+- id: send-review
+  label: 送 reviewer 做独立检查
+  type: task
+  actor: reviewer
+  inputs: []
+  outputs: []
+- id: accepted
+  label: 结论可被接受
+  type: end
+  actor: main-agent
+  inputs: []
+  outputs: []
+- id: record-gap
+  label: 登记 gap 和当前停在哪一层
+  type: task
+  actor: analyst
+  outputs:
+  - gap-ledger
+  inputs: []
+- id: can-probe
+  label: 还能在现有资料中追查吗？
+  type: decision
+  actor: analyst
+  inputs: []
+  outputs: []
+- id: bounded-rework
+  label: 按预算继续深挖或返工
+  type: task
+  actor: analyst
+  inputs: []
+  outputs: []
+- id: need-source
+  label: 写清缺什么资料和为什么需要
+  type: task
+  actor: analyst
+  outputs:
+  - source-request
+  inputs: []
+- id: user-provides
+  label: 用户补充资料或确认无法提供
+  type: task
+  actor: user
+  inputs: []
+  outputs: []
+- id: gate-decision
+  label: Gate 决定等待、继续或作为限制
+  type: decision
+  actor: main-agent
+  inputs: []
+  outputs: []
+- id: continue-after-source
+  label: 拿到资料后重新分析
+  type: task
+  actor: analyst
+  inputs: []
+  outputs: []
+- id: visible-limitation
+  label: 在报告中显式标为限制
+  type: end
+  actor: main-agent
+  inputs: []
+  outputs: []
+edges:
+- id: start-to-trace-source-chain
+  from: start
+  to: trace-source-chain
+  type: sequence
+- id: trace-source-chain-to-chain-complete
+  from: trace-source-chain
+  to: chain-complete
+  type: sequence
+- id: chain-complete-to-send-review
+  from: chain-complete
+  to: send-review
+  type: conditional
+  condition: 闭合
+- id: send-review-to-accepted
+  from: send-review
+  to: accepted
+  type: sequence
+- id: chain-complete-to-record-gap
+  from: chain-complete
+  to: record-gap
+  type: conditional
+  condition: 未闭合
+- id: record-gap-to-can-probe
+  from: record-gap
+  to: can-probe
+  type: sequence
+- id: can-probe-to-bounded-rework
+  from: can-probe
+  to: bounded-rework
+  type: conditional
+  condition: 可以
+- id: bounded-rework-to-trace-source-chain
+  from: bounded-rework
+  to: trace-source-chain
+  type: sequence
+- id: can-probe-to-need-source
+  from: can-probe
+  to: need-source
+  type: conditional
+  condition: 不可以
+- id: need-source-to-user-provides
+  from: need-source
+  to: user-provides
+  type: sequence
+- id: user-provides-to-gate-decision
+  from: user-provides
+  to: gate-decision
+  type: sequence
+- id: gate-decision-to-continue-after-source
+  from: gate-decision
+  to: continue-after-source
+  type: conditional
+  condition: 资料已补
+- id: continue-after-source-to-trace-source-chain
+  from: continue-after-source
+  to: trace-source-chain
+  type: sequence
+- id: gate-decision-to-visible-limitation
+  from: gate-decision
+  to: visible-limitation
+  type: conditional
+  condition: 无法补
+constraints:
+- id: no-speculation
+  label: 缺资料时不靠猜测填空
+  applies_to:
+  - need-source
+  - visible-limitation
+assumptions:
+- 图中把 reviewer 发现 gap 和 analyst 自己发现 gap 合并为同一个 gap 处理路径。
+open_questions: []

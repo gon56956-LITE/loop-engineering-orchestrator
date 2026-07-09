@@ -1,0 +1,191 @@
+version: workflow-contract/v1
+title: 一次完整 Wave Loop 怎么运行
+summary: 展示从准备、执行、审查、返工到最终整合的完整闭环。
+scope:
+  in:
+  - 解释 loop-engineering-orchestrator 的核心运行顺序
+  - 突出主 agent、执行 agent、reviewer、handoff-steward 的分工
+  out:
+  - 不描述某个具体项目的技术细节
+actors:
+- id: user
+  label: 用户
+  type: person
+- id: main-agent
+  label: 主 agent
+  type: system
+- id: workers
+  label: 执行 agents
+  type: system
+- id: reviewers
+  label: Review agents
+  type: system
+- id: handoff
+  label: Handoff steward
+  type: system
+artifacts:
+- id: agent-work
+  label: agent_work 控制目录
+  type: document
+- id: work-packets
+  label: 工作包
+  type: document
+- id: accepted-artifacts
+  label: 已接受成果
+  type: output
+- id: review-findings
+  label: 审查意见
+  type: decision_record
+nodes:
+- id: start
+  label: 用户提出复杂任务
+  type: start
+  actor: user
+  inputs: []
+  outputs: []
+- id: initialize-control
+  label: 建立 agent_work 和计划文件
+  type: task
+  actor: main-agent
+  outputs:
+  - agent-work
+  inputs: []
+- id: wave-zero
+  label: Wave0 先摸清边界和资料
+  type: task
+  actor: main-agent
+  inputs:
+  - agent-work
+  outputs: []
+- id: gate-zero
+  label: Gate0 确认范围和工作包
+  type: task
+  actor: main-agent
+  outputs:
+  - work-packets
+  inputs: []
+- id: assign-work
+  label: 分派执行、审查和返工角色
+  type: task
+  actor: main-agent
+  inputs:
+  - work-packets
+  outputs: []
+- id: execute-packets
+  label: 执行 agents 完成各自工作
+  type: task
+  actor: workers
+  inputs: []
+  outputs: []
+- id: rolling-review
+  label: 完成一个包就立即审查
+  type: task
+  actor: reviewers
+  outputs:
+  - review-findings
+  inputs: []
+- id: review-result
+  label: 审查是否通过？
+  type: decision
+  actor: reviewers
+  inputs: []
+  outputs: []
+- id: owner-rework
+  label: 原 owner 返工，不由主 agent 代修
+  type: task
+  actor: workers
+  inputs: []
+  outputs: []
+- id: record-accepted
+  label: 记录已接受成果和证据链
+  type: task
+  actor: main-agent
+  outputs:
+  - accepted-artifacts
+  inputs: []
+- id: gate-n
+  label: GateN 统一裁决本轮结果
+  type: task
+  actor: main-agent
+  inputs: []
+  outputs: []
+- id: handoff-update
+  label: 更新 handoff，方便续接
+  type: task
+  actor: handoff
+  inputs: []
+  outputs: []
+- id: finish
+  label: 可以进入下一轮或最终报告
+  type: end
+  actor: main-agent
+  inputs: []
+  outputs: []
+edges:
+- id: start-to-initialize-control
+  from: start
+  to: initialize-control
+  type: sequence
+- id: initialize-control-to-wave-zero
+  from: initialize-control
+  to: wave-zero
+  type: sequence
+- id: wave-zero-to-gate-zero
+  from: wave-zero
+  to: gate-zero
+  type: sequence
+- id: gate-zero-to-assign-work
+  from: gate-zero
+  to: assign-work
+  type: sequence
+- id: assign-work-to-execute-packets
+  from: assign-work
+  to: execute-packets
+  type: sequence
+- id: execute-packets-to-rolling-review
+  from: execute-packets
+  to: rolling-review
+  type: sequence
+- id: rolling-review-to-review-result
+  from: rolling-review
+  to: review-result
+  type: sequence
+- id: review-result-to-owner-rework
+  from: review-result
+  to: owner-rework
+  type: conditional
+  condition: 需要修改
+- id: owner-rework-to-rolling-review
+  from: owner-rework
+  to: rolling-review
+  type: sequence
+- id: review-result-to-record-accepted
+  from: review-result
+  to: record-accepted
+  type: conditional
+  condition: 通过
+- id: record-accepted-to-gate-n
+  from: record-accepted
+  to: gate-n
+  type: sequence
+- id: gate-n-to-handoff-update
+  from: gate-n
+  to: handoff-update
+  type: sequence
+- id: handoff-update-to-finish
+  from: handoff-update
+  to: finish
+  type: sequence
+constraints:
+- id: rolling-review-rule
+  label: 不必等所有执行 agents 都完成才开始 review
+  applies_to:
+  - rolling-review
+- id: main-agent-gate-owner
+  label: 主 agent 负责 Gate 决策，但不吸收所有细节
+  applies_to:
+  - gate-zero
+  - gate-n
+assumptions:
+- 图中把多个执行包合并成一个示意节点，实际项目可以有多个并行工作包。
+open_questions: []

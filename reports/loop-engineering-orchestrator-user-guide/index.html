@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Loop Engineering Orchestrator 普通用户指南</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #132033;
+      --muted: #5d6b7d;
+      --line: #d8e0ea;
+      --panel: #ffffff;
+      --soft: #f5f8fc;
+      --blue: #2563eb;
+      --cyan: #0891b2;
+      --green: #15803d;
+      --amber: #b45309;
+      --rose: #be123c;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: #eef3f8;
+      color: var(--ink);
+      font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.72;
+    }
+
+    a {
+      color: var(--blue);
+    }
+
+    .hero {
+      background: linear-gradient(180deg, #f8fbff 0%, #edf4fb 100%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .wrap {
+      width: min(1180px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+
+    .hero-inner {
+      min-height: 460px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      gap: 34px;
+      align-items: center;
+      padding: 54px 0 38px;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 14px 0 16px;
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 760px;
+      color: #314158;
+      font-size: 20px;
+    }
+
+    .hero-visual {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .hero-visual img,
+    .diagram img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .quick-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 26px;
+    }
+
+    .quick-item {
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .quick-item strong {
+      display: block;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+
+    main {
+      background: #f7f9fc;
+    }
+
+    section {
+      padding: 42px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0 0 18px;
+      font-size: 30px;
+      line-height: 1.22;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 19px;
+      line-height: 1.32;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0 0 14px;
+    }
+
+    .section-intro {
+      max-width: 880px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+    }
+
+    .card p,
+    .card li {
+      color: var(--muted);
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 3px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #314158;
+      background: #f8fafc;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .tag.blue { color: #1d4ed8; background: #eff6ff; border-color: #bfdbfe; }
+    .tag.green { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
+    .tag.amber { color: #92400e; background: #fffbeb; border-color: #fde68a; }
+    .tag.rose { color: #9f1239; background: #fff1f2; border-color: #fecdd3; }
+
+    .plain-list {
+      margin: 12px 0 0;
+      padding-left: 20px;
+    }
+
+    .plain-list li {
+      margin: 8px 0;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: start;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-weight: 800;
+    }
+
+    .diagram {
+      margin-top: 22px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .diagram-caption {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .role-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    .role-table th,
+    .role-table td {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .role-table th {
+      background: #edf4fb;
+      color: #1f2a44;
+    }
+
+    .role-table tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .callout {
+      border-left: 4px solid var(--blue);
+      background: #eff6ff;
+      padding: 18px 20px;
+      border-radius: 8px;
+      color: #1e3a5f;
+    }
+
+    .callout.warning {
+      border-left-color: var(--amber);
+      background: #fff7ed;
+      color: #613b12;
+    }
+
+    .callout.danger {
+      border-left-color: var(--rose);
+      background: #fff1f2;
+      color: #6b1029;
+    }
+
+    .example {
+      background: #111827;
+      color: #eef2ff;
+      border-radius: 8px;
+      padding: 18px;
+      overflow: auto;
+      font-size: 14px;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    footer {
+      background: #132033;
+      color: #dbeafe;
+      padding: 28px 0;
+    }
+
+    footer p {
+      color: #cbd5e1;
+      margin: 0;
+    }
+
+    @media (max-width: 900px) {
+      .hero-inner,
+      .grid.two,
+      .grid.three,
+      .quick-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-inner {
+        padding-top: 34px;
+      }
+
+      h1 {
+        font-size: 40px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap hero-inner">
+      <div>
+        <div class="eyebrow">Loop Engineering Orchestrator</div>
+        <h1>让复杂任务变成可追踪的工作循环</h1>
+        <p class="lead">
+          这份报告给没有编程基础的 Codex 用户阅读。它解释什么时候该用这个 skill、使用前要准备什么、运行中谁负责什么，以及为什么它能减少“做到一半说不清、证据找不到、返工没人管”的问题。
+        </p>
+        <div class="quick-strip" aria-label="快速摘要">
+          <div class="quick-item">
+            <strong>适合复杂任务</strong>
+            多资料、多步骤、多角色、需要审查和返工。
+          </div>
+          <div class="quick-item">
+            <strong>不替代判断</strong>
+            主 agent 仍然负责最终 Gate 决策。
+          </div>
+          <div class="quick-item">
+            <strong>不隐藏不确定</strong>
+            缺资料会变成明确的 gap 或 source request。
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-label="是否适用流程图">
+        <img src="diagrams/fit-check.svg" alt="是否适合使用 Loop Engineering Orchestrator 的判断流程图">
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="wrap">
+        <h2>一句话理解</h2>
+        <p class="section-intro">
+          普通 Codex 对话像“请一个人一路做完”。Loop Engineering Orchestrator 更像“给复杂项目搭一个工作台”：先定边界，再分派角色，边做边审查，返工有 owner，缺资料会公开记录，最后只把通过审查或明确标注限制的内容放进交付物。
+        </p>
+        <div class="grid three" style="margin-top: 20px;">
+          <div class="card">
+            <span class="tag blue">工作台</span>
+            <h3>它管理过程，不替你决定答案</h3>
+            <p>它不保证所有问题都能自动解决，但会让每一步、每个证据、每个未解决问题都留下记录。</p>
+          </div>
+          <div class="card">
+            <span class="tag green">分工</span>
+            <h3>它把任务拆给合适角色</h3>
+            <p>执行、审查、返工、报告撰写和交接不是混在一个长上下文里，而是按角色和 Wave 管理。</p>
+          </div>
+          <div class="card">
+            <span class="tag amber">防丢失</span>
+            <h3>它专门防止中途失忆</h3>
+            <p>长任务会留下 handoff、状态文件、队列和 Gate 记录。新会话接手时不用从头猜。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>什么时候适合用</h2>
+        <p class="section-intro">
+          只要你担心“普通对话会越跑越长、越跑越乱、证据越积越多”，就可以考虑用它。下面是最常见的适用范围。
+        </p>
+        <div class="grid two" style="margin-top: 20px;">
+          <div class="card">
+            <h3>适合</h3>
+            <ul class="plain-list">
+              <li>需要读很多文件、报告、表格、日志或网页。</li>
+              <li>需要多个 agent 分头研究，再互相检查。</li>
+              <li>结果必须能说明“证据从哪里来”。</li>
+              <li>有较高返工风险，不能让主 agent 随手修一修就算完成。</li>
+              <li>最后要写正式报告、汇总文档、图表或长期可复用成果。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>不太适合</h3>
+            <ul class="plain-list">
+              <li>一句话能答完的普通问题。</li>
+              <li>只需要改一个小错、查一个简单路径、翻译一小段文字。</li>
+              <li>你不希望使用 subagent 或不希望保留工作记录。</li>
+              <li>任务没有明确目标，也没有可用资料，连基本方向都还没想好。</li>
+              <li>你要求“马上给一个大概答案”，而不是做可审查的工作。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="diagram">
+          <img src="diagrams/fit-check.svg" alt="使用前判断这个任务是否适合进入循环的流程图">
+          <p class="diagram-caption">图 1：使用前先判断任务复杂度和资料边界。合同源文件：<code>diagrams/fit-check.yaml</code>。</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>使用前要准备什么</h2>
+        <p class="section-intro">
+          你不需要会编程，但最好能提前说清楚这些内容。说得越清楚，后续 Wave0 和 Gate0 就越少返工。
+        </p>
+        <div class="checklist">
+          <div class="check">
+            <div class="mark">1</div>
+            <div><strong>最终想得到什么</strong><br>例如报告、结论、代码修改、数据诊断、PPT、图表，还是一个可以继续执行的计划。</div>
+          </div>
+          <div class="check">
+            <div class="mark">2</div>
+            <div><strong>哪些资料可以用</strong><br>文件夹、文档、表格、日志、截图、网页、邮件、SharePoint、Teams 等。能给路径就给路径。</div>
+          </div>
+          <div class="check">
+            <div class="mark">3</div>
+            <div><strong>哪些事情不能做</strong><br>比如不能访问 live system、不能写数据库、不能改生产文件、只能看复制出来的资料。</div>
+          </div>
+          <div class="check">
+            <div class="mark">4</div>
+            <div><strong>质量优先还是速度优先</strong><br>这个 skill 默认偏质量和可追踪。你也可以说哪些部分可以粗略，哪些必须严格。</div>
+          </div>
+          <div class="check">
+            <div class="mark">5</div>
+            <div><strong>是否允许使用 subagents</strong><br>多个 agent 可以并行省时间，但会产生更多状态文件、队列和审查记录。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>完整工作流程</h2>
+        <p class="section-intro">
+          这个 skill 的核心不是“让很多 agent 同时跑”，而是让每一轮工作都有开始、执行、审查、返工、裁决和交接。下面这张图展示一次标准 Wave Loop。
+        </p>
+        <div class="diagram">
+          <img src="diagrams/wave-loop.svg" alt="一次完整 Wave Loop 的流程图">
+          <p class="diagram-caption">图 2：一次完整 Wave Loop。合同源文件：<code>diagrams/wave-loop.yaml</code>。</p>
+        </div>
+        <div class="grid three" style="margin-top: 20px;">
+          <div class="card">
+            <span class="tag blue">Wave0</span>
+            <h3>先摸清边界</h3>
+            <p>正式开工前，先确认资料、风险、工作包、角色和限制。它不是最终答案。</p>
+          </div>
+          <div class="card">
+            <span class="tag green">WaveN</span>
+            <h3>执行和审查一起推进</h3>
+            <p>一个工作包完成后就可以立即 review，不必等所有执行 agent 都结束。</p>
+          </div>
+          <div class="card">
+            <span class="tag amber">GateN</span>
+            <h3>最后统一裁决</h3>
+            <p>主 agent 决定哪些成果接受、哪些返工、哪些作为 gap 或限制写入后续。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>角色怎么分工</h2>
+        <p class="section-intro">
+          你可以把它理解成一个小项目组。不同角色不是为了热闹，而是为了避免主 agent 一个人背太多上下文。
+        </p>
+        <table class="role-table">
+          <thead>
+            <tr>
+              <th>角色</th>
+              <th>普通用户可以怎么理解</th>
+              <th>不能做什么</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>主 agent</strong></td>
+              <td>项目负责人，负责定范围、分配工作、做 Gate 决策。</td>
+              <td>不应该亲自吞掉所有细节，也不应该绕过 review。</td>
+            </tr>
+            <tr>
+              <td><strong>handoff-steward</strong></td>
+              <td>会议纪要和交接负责人，保留当前状态、下一步、阻塞点。</td>
+              <td>不做主分析，不替 reviewer 判断质量。</td>
+            </tr>
+            <tr>
+              <td><strong>dependency-coordinator</strong></td>
+              <td>协调员，帮多个 agent 之间传递问题、依赖和共享约定。</td>
+              <td>不裁决证据真假，不接受或拒绝成果。</td>
+            </tr>
+            <tr>
+              <td><strong>evidence-analyst</strong></td>
+              <td>证据研究员，追查资料、来源链、机制和不确定点。</td>
+              <td>不能把中间数据直接当源头，也不能把缺口说成结论。</td>
+            </tr>
+            <tr>
+              <td><strong>reviewer</strong></td>
+              <td>独立审查员，检查证据、逻辑、可读性、测试和遗漏。</td>
+              <td>不直接接管原 owner 的工作，除非主 agent 记录了转交。</td>
+            </tr>
+            <tr>
+              <td><strong>output-synthesizer</strong></td>
+              <td>报告写作者，只把已接受成果和已声明限制写成正式文本。</td>
+              <td>不能新编事实，不能把不确定内容写得更确定。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>遇到疑点、缺资料或反复返工怎么办</h2>
+        <p class="section-intro">
+          这是这个 skill 现在最重要的保护机制之一。它要求 agent 不只回答一层结果，而是追问“这个表从哪里来”“这个命令输出是谁生成的”“更早的源头是什么”。如果追不到，就必须把缺口暴露出来。
+        </p>
+        <div class="diagram">
+          <img src="diagrams/gap-handling.svg" alt="遇到 gap 或缺资料时的处理流程图">
+          <p class="diagram-caption">图 3：gap 和缺资料处理路径。合同源文件：<code>diagrams/gap-handling.yaml</code>。</p>
+        </div>
+        <div class="grid two" style="margin-top: 20px;">
+          <div class="callout">
+            <h3>gap ledger 是什么？</h3>
+            <p>它是“未解决问题登记表”。每个 gap 都要说明是谁发现的、停在哪一层、已经尝试过什么、还缺什么、对结论信心有什么影响。</p>
+          </div>
+          <div class="callout warning">
+            <h3>source request 是什么？</h3>
+            <p>当现有资料不够，agent 不能继续靠猜。它要明确告诉你：缺哪个文件、日志、数据或授权；为什么需要；有没有替代资料。</p>
+          </div>
+        </div>
+        <div class="callout danger" style="margin-top: 16px;">
+          <strong>关键规则：</strong>缺证据不是证据。缺资料时，报告里应该写“这里无法确认，需要某个来源”，而不是把一个看似合理的猜测写成结论。
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>你会看到哪些输出</h2>
+        <div class="grid three">
+          <div class="card">
+            <h3>计划类文件</h3>
+            <p>说明任务目标、资料边界、风险、Wave 安排、角色分工。你可以把它当作项目计划。</p>
+          </div>
+          <div class="card">
+            <h3>状态和队列</h3>
+            <p>记录每个 agent 当前在做什么、等谁、哪里阻塞、哪些内容需要 review 或返工。</p>
+          </div>
+          <div class="card">
+            <h3>最终交付物</h3>
+            <p>报告、图表、代码修改、知识包或其他成果。它应该只整合已接受内容和明确标注的限制。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>给普通用户的启动提示模板</h2>
+        <p class="section-intro">
+          你可以复制下面这段作为开头，然后把括号里的内容换成你的任务信息。
+        </p>
+        <div class="example">请使用 loop-engineering-orchestrator 来管理这个任务。
+
+目标：我想得到（最终报告/代码修复/数据诊断/知识包）。
+资料：可以使用（文件夹、文档、表格、日志、网页或其他来源）。
+限制：不能做（访问 live system / 写数据库 / 修改原始文件 / 使用外部网络等）。
+质量要求：更重视准确性和可追踪性，必要时可以使用 subagents。
+特别注意：如果证据链追不到源头，请把缺口写成 gap 或 source request，不要猜测填空。</div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>怎么判断它跑得好不好</h2>
+        <div class="grid two">
+          <div class="card">
+            <h3>好迹象</h3>
+            <ul class="plain-list">
+              <li>一开始就问清目标、资料、限制和成功标准。</li>
+              <li>每个 agent 有明确工作包和 owner。</li>
+              <li>review 是滚动发生的，不是最后才统一检查。</li>
+              <li>返工回到原 owner，不由主 agent 悄悄代修。</li>
+              <li>缺资料时出现明确的 gap 或 source request。</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>坏迹象</h3>
+            <ul class="plain-list">
+              <li>很多结论没有来源，只说“看起来是”。</li>
+              <li>主 agent 把所有分析、审查、报告都自己做完。</li>
+              <li>执行 agent 完成后很久才开始 review。</li>
+              <li>遇到缺资料继续猜，而不是暴露给用户。</li>
+              <li>最终报告把限制和不确定性写没了。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <h2>最后的使用建议</h2>
+        <div class="callout">
+          <p>
+            如果任务很长，不要急着让 Codex 直接写最终答案。先让它用这个 skill 建立工作台，再逐轮推进。你作为用户最重要的角色不是写代码，而是提供边界、确认授权、补充缺失来源，并在关键 Gate 上判断“这个结果是否可以接受”。
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>本报告依据本地 <code>loop-engineering-orchestrator</code> skill 当前工作树编写。流程图由 <code>workflow-builder</code> 的 <code>modern-tech</code> 风格渲染。</p>
+    </div>
+  </footer>
+</body>
+</html>

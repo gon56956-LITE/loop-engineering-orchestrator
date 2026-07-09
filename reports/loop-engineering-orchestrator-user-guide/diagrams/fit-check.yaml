@@ -1,0 +1,127 @@
+version: workflow-contract/v1
+title: 是否适合使用 Loop Engineering Orchestrator
+summary: 帮助普通用户判断一个任务是否需要进入多轮、多角色、可追踪的工作流程。
+scope:
+  in:
+  - 判断一个 Codex 任务是否需要用 loop-engineering-orchestrator 管理
+  - 说明使用前需要准备的基本信息
+  out:
+  - 不替用户完成具体研究或代码任务
+actors:
+- id: user
+  label: 用户
+  type: person
+- id: codex
+  label: Codex
+  type: system
+artifacts:
+- id: task-request
+  label: 任务描述
+  type: input
+- id: source-boundaries
+  label: 资料与边界
+  type: document
+- id: loop-plan
+  label: 循环计划
+  type: decision_record
+nodes:
+- id: start
+  label: 提出一个复杂任务
+  type: start
+  actor: user
+  outputs:
+  - task-request
+  inputs: []
+- id: describe-goal
+  label: 说明目标和期望结果
+  type: task
+  actor: user
+  inputs:
+  - task-request
+  outputs: []
+- id: complexity-check
+  label: 任务是否长、复杂或证据很多？
+  type: decision
+  actor: codex
+  inputs: []
+  outputs: []
+- id: simple-task
+  label: 直接让 Codex 单线程处理
+  type: end
+  actor: codex
+  inputs: []
+  outputs: []
+- id: boundary-check
+  label: 是否能说明资料、限制和风险？
+  type: decision
+  actor: codex
+  inputs: []
+  outputs: []
+- id: ask-basics
+  label: 先补充关键资料或限制
+  type: task
+  actor: user
+  outputs:
+  - source-boundaries
+  inputs: []
+- id: choose-loop
+  label: 启动 Loop Engineering
+  type: task
+  actor: codex
+  inputs:
+  - task-request
+  - source-boundaries
+  outputs:
+  - loop-plan
+- id: ready
+  label: 进入可追踪工作流程
+  type: end
+  actor: codex
+  inputs:
+  - loop-plan
+  outputs: []
+edges:
+- id: start-to-describe-goal
+  from: start
+  to: describe-goal
+  type: sequence
+- id: describe-goal-to-complexity-check
+  from: describe-goal
+  to: complexity-check
+  type: sequence
+- id: complexity-check-to-simple-task
+  from: complexity-check
+  to: simple-task
+  type: conditional
+  condition: 不复杂
+- id: complexity-check-to-boundary-check
+  from: complexity-check
+  to: boundary-check
+  type: conditional
+  condition: 复杂
+- id: boundary-check-to-ask-basics
+  from: boundary-check
+  to: ask-basics
+  type: conditional
+  condition: 还不清楚
+- id: ask-basics-to-boundary-check
+  from: ask-basics
+  to: boundary-check
+  type: sequence
+- id: boundary-check-to-choose-loop
+  from: boundary-check
+  to: choose-loop
+  type: conditional
+  condition: 已清楚
+- id: choose-loop-to-ready
+  from: choose-loop
+  to: ready
+  type: sequence
+constraints:
+- id: do-not-use-for-simple-work
+  label: 简单的一步任务不需要启用完整循环
+  applies_to:
+  - simple-task
+assumptions:
+- 用户已经决定让 Codex 帮忙处理任务，但还不确定是否需要多角色循环。
+open_questions: []
