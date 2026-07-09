@@ -11,13 +11,14 @@ Default reasoning effort: inherit the main agent's effort. Use `medium` only for
 Default gates:
 
 - Source inventory gate
+- Provenance/source-chain gate
 - Internal structure/depth gate
 - Claim trace gate
 - Conflict/gap gate
 - Confidence gate
 - Readability gate
 
-Acceptance requires source references for strong claims, explicit inference labels, and a below-surface inspection of multi-layer artifacts when nested structure or algorithm logic may affect the answer.
+Acceptance requires source references for strong claims, explicit inference labels, source-chain tracing for central derived evidence, and a below-surface inspection of multi-layer artifacts when nested structure or algorithm logic may affect the answer.
 
 ## code_implementation
 
@@ -44,12 +45,13 @@ Default reasoning effort: inherit the main agent's effort.
 Default gates:
 
 - Data quality gate
+- Provenance/source-chain gate for derived extracts or metrics
 - Reproducibility gate
 - Formula/math gate
 - Visualization integrity gate when charts exist
 - Caveat/confidence gate
 
-Acceptance requires schema inspection, row counts, calculation reproduction, and caveats.
+Acceptance requires schema inspection, row counts, calculation reproduction, source-chain classification for derived data, and caveats.
 
 ## visual_report
 
@@ -78,10 +80,36 @@ Default gates:
 - Source coverage gate
 - Structure gate
 - Claim trace gate
+- Output-synthesis gate when a writer agent produces the deliverable
 - Audience usefulness gate
 - Gap/conflict gate
 
-Acceptance requires a coherent narrative without losing source boundaries.
+Acceptance requires a coherent narrative without losing source boundaries, provenance, claim strength, or declared gaps. Substantial text deliverables should be produced through an Output Synthesis Wave with reviewer and rework capacity, not by main-agent solo writing.
+
+## output_synthesis
+
+Use for final or interim Markdown/HTML reports, technical briefs, executive summaries, synthesis narratives, report drafts, or handoff packages built from accepted artifacts and declared gaps.
+
+Default reasoning effort: inherit the main agent's effort. Use `medium` only for post-acceptance formatting after the synthesis is accepted.
+
+Default gates:
+
+- Integration-plan gate
+- Accepted-artifact-only gate
+- Provenance preservation gate
+- Claim-strength gate
+- Readability/usefulness gate
+- Gap visibility gate
+
+Acceptance requires that the output uses only accepted artifacts or declared gaps, preserves provenance and confidence, keeps limitations visible, and does not make polished prose stronger than the evidence.
+
+## Wave-Level Operating Gates
+
+These gates apply across profiles when a loop uses multiple packets or agents:
+
+- Rolling review gate: packet-level review starts as soon as a packet reaches a review-readiness state, without waiting for unrelated execution packets to finish.
+- Rework ownership gate: review findings return to the original owner unless ownership is formally reassigned.
+- Output integration gate: final deliverables use only accepted artifacts or declared gaps.
 
 ## specialist_investigation
 

@@ -7,11 +7,14 @@ from pathlib import Path
 
 TERMINAL_STATES = {
     "accepted",
+    "gate_accepted",
     "visual_accepted",
+    "output_accepted",
     "report_integrated",
     "gap",
     "declared_gap",
     "declared-gap",
+    "subwave_complete",
     "subwave_closed",
     "released",
     "closed",
@@ -19,6 +22,21 @@ TERMINAL_STATES = {
 RECOVERY_STATES = {"suspended_by_transport", "resume_pending", "recovery_review"}
 RELEASED_STATUSES = {"released", "closed", "carried_forward"}
 FORBIDDEN_EFFORTS = {"low", "light"}
+READY_FOR_REVIEW_STATES = {
+    "ready_for_trace_review",
+    "ready_for_accuracy_review",
+    "ready_for_depth_review",
+    "ready_for_readability_review",
+}
+REWORK_STATES = {
+    "trace_rework",
+    "accuracy_rework",
+    "depth_rework",
+    "readability_rework",
+    "output_rework",
+    "gate_rework",
+    "subwave_closeout_rework",
+}
 APPROVED_CUSTOM_AGENTS = {
     "handoff-steward",
     "evidence-analyst",
@@ -85,6 +103,17 @@ def newest_mtime(paths):
             newest = m if newest is None or m > newest else newest
     return newest
 
+def artifact_paths(root, artifact):
+    path = Path(artifact)
+    if path.is_absolute():
+        return [path]
+    in_root = root / path
+    legacy = root.parent / path
+    paths = [in_root]
+    if legacy != in_root:
+        paths.append(legacy)
+    return paths
+
 def inspect_custom_agents(state):
     policy = state.get("custom_agent_policy", {})
     approved = set(policy.get("approved_custom_agents", [])) or APPROVED_CUSTOM_AGENTS
@@ -150,14 +179,15 @@ def main():
     terminal_wave_agent_without_release = []
     unapproved_custom_agents = []
     active_optional_custom_agents = set()
+    ready_review_without_queue = []
+    rework_without_queue = []
     for path in agents:
         data = read_json(path)
         silent_until = parse_time(data.get("silent_window_until"))
         owned = []
         artifact = data.get("current_artifact")
         if artifact:
-            ap = Path(artifact)
-            owned.append(ap if ap.is_absolute() else (root.parent / ap))
+            owned.extend(artifact_paths(root, artifact))
         latest = newest_mtime([path] + owned)
         latest_age = age_minutes(latest, now)
         missed = int(latest_age // heartbeat) if latest_age is not None else 999
@@ -203,6 +233,10 @@ def main():
         if lifecycle == "wave_scoped" and state_name in TERMINAL_STATES:
             if str(release_status).lower() not in RELEASED_STATUSES:
                 terminal_wave_agent_without_release.append(path.stem)
+        if state_name in READY_FOR_REVIEW_STATES and not data.get("review_queue_ids"):
+            ready_review_without_queue.append(path.stem)
+        if state_name in REWORK_STATES and not data.get("rework_queue_ids"):
+            rework_without_queue.append(path.stem)
         print(f"- {path.stem}: health={health}; state={state_name}; role={role}; custom_agent={custom_agent}; lifecycle={lifecycle}; wave={wave_id}; subwave={subwave_id}; release={release_status}; profile={profile}; effort={effort}; latest_age_min={fmt_age(latest_age)}; next={data.get('next_step','')}")
     print("")
     print("## Custom Agent Configs")
@@ -218,8 +252,10 @@ def main():
     print("")
     print("## Queue Counts")
     any_counts = False
+    queue_counts = {}
     for name in QUEUE_NAMES:
         counts = jsonl_counts(root / "queues" / name)
+        queue_counts[name] = counts
         if counts:
             any_counts = True
             print(f"- {name}: {counts}")
@@ -261,6 +297,17 @@ def main():
         warnings.append(f"persistent_agent_wrong_lifecycle: {', '.join(bad_persistent_lifecycle)}")
     if terminal_wave_agent_without_release:
         warnings.append(f"terminal_wave_agent_without_release_status: {', '.join(terminal_wave_agent_without_release)}")
+    if ready_review_without_queue:
+        warnings.append(f"ready_for_review_without_review_queue: {', '.join(ready_review_without_queue)}")
+    if rework_without_queue:
+        warnings.append(f"rework_state_without_rework_queue: {', '.join(rework_without_queue)}")
+    invalid_queues = [
+        f"{name}:{counts['invalid_json']}"
+        for name, counts in queue_counts.items()
+        if counts.get("invalid_json")
+    ]
+    if invalid_queues:
+        warnings.append(f"invalid_queue_json: {', '.join(invalid_queues)}")
     missing_or_invalid_custom_agents = []
     for name, result in custom_agent_findings.items():
         if result == "ok":
@@ -272,7 +319,7 @@ def main():
         warnings.append(f"custom_agent_config_not_ready: {', '.join(missing_or_invalid_custom_agents)}")
     if unapproved_custom_agents:
         warnings.append(f"unapproved_custom_agent_in_status: {', '.join(unapproved_custom_agents)}")
-    dependency_request_counts = jsonl_counts(root / "queues" / "dependency_requests.jsonl")
+    dependency_request_counts = queue_counts.get("dependency_requests.jsonl", {})
     active_dependency_requests = sum(
         count for status, count in dependency_request_counts.items()
         if status not in TERMINAL_STATES and status not in {"answered", "closed", "resolved", "cancelled", "canceled"}

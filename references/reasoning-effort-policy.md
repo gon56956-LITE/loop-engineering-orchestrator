@@ -28,6 +28,7 @@ If the main agent is running at `xhigh`, subagents inherit `xhigh` unless the ta
 - `data_analysis`: inherit main effort
 - `visual_report`: inherit main effort; `medium` allowed for already-specified simple production
 - `document_synthesis`: inherit main effort
+- `output_synthesis`: inherit main effort; `medium` allowed only for post-acceptance formatting
 - `specialist_investigation`: inherit main effort; escalate if reverse engineering, math, or conflict adjudication needs more
 
 ## Escalation Triggers
@@ -49,6 +50,7 @@ Escalate to `xhigh` when work involves:
 - source-of-truth conflict adjudication
 - two failed rework rounds
 - final report claim integration
+- output synthesis that must preserve provenance and claim strength across many accepted artifacts
 - security, legal, medical, financial, or other high-stakes interpretation
 
 ## Downgrade Triggers
@@ -86,6 +88,10 @@ Downgrade to `medium` only when work is:
 - concurrency or silent-window notes
 
 `queues/specialist_requests.jsonl` should include:
+
+- `requested_reasoning_effort`
+
+`queues/dependency_requests.jsonl` should include:
 
 - `requested_reasoning_effort`
 

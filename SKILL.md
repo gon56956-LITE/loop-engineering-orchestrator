@@ -11,7 +11,7 @@ Use this skill when the work is too long, risky, cross-functional, or evidence-h
 
 The main agent is the final orchestrator and gate decision owner. `handoff-steward` is the persistent continuity partner. Large or tightly coupled waves may also use a persistent `dependency-coordinator` to keep cross-agent requests moving without loading every operational detail into the main agent. Other subagents are wave-scoped workers, analysts, reviewers, visual producers, maintainers, testers, or rework owners. Hooks and scripts only observe state and run checks; they never replace main-agent judgment.
 
-A successful loop has six durable surfaces:
+A successful loop has seven durable surfaces:
 
 1. `agent_work/` control directory for state and handoff.
 2. Persistent control pair: main agent plus `handoff-steward` active from start to finish, with optional `dependency-coordinator` for high-coupling waves.
@@ -44,6 +44,7 @@ Choose one or more profiles before spawning agents. Read `references/profiles.md
 - `data_analysis`: metric, CSV/XLSX/database, statistical, or diagnostic analysis requiring reproducible calculations.
 - `visual_report`: charts, diagrams, HTML/PPT/PDF reports, screenshots, or visual QA.
 - `document_synthesis`: WI/SOP/doc synthesis, knowledge packages, comparison reports, or executive narratives.
+- `output_synthesis`: final or interim text deliverables from accepted artifacts, declared gaps, claim traces, and integration plans.
 - `specialist_investigation`: targeted expert support such as reverse engineering, API tracing, security review, legal-source lookup, or domain-specific validation.
 
 ## Reasoning Effort Policy

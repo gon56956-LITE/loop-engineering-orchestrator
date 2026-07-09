@@ -63,6 +63,7 @@ DEFAULT_STATE = {
             "data_analysis": "inherit_main",
             "visual_report": "inherit_main_or_medium_when_simple",
             "document_synthesis": "inherit_main",
+            "output_synthesis": "inherit_main",
             "specialist_investigation": "inherit_main"
         },
         "missing_effort_is_warning": True
@@ -106,6 +107,26 @@ QUEUE_FILES = [
 
 def now_iso():
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+def merge_unique_list(target, key, defaults):
+    current = target.get(key, [])
+    if not isinstance(current, list):
+        current = []
+    for item in defaults:
+        if item not in current:
+            current.append(item)
+    target[key] = current
+
+def merge_policy_defaults(target, defaults):
+    for key, value in defaults.items():
+        if isinstance(value, list):
+            merge_unique_list(target, key, value)
+        elif isinstance(value, dict):
+            current = target.setdefault(key, {})
+            if isinstance(current, dict):
+                merge_policy_defaults(current, value)
+        else:
+            target.setdefault(key, value)
 
 def initial_content(name):
     title = name.replace("_", " ").replace(".md", "").title()
@@ -360,15 +381,11 @@ def main():
         data = json.loads(state.read_text(encoding="utf-8"))
         data.setdefault("profiles", [])
         data.setdefault("persistent_agents", DEFAULT_STATE["persistent_agents"])
-        data.setdefault("custom_agent_policy", DEFAULT_STATE["custom_agent_policy"])
-        data["custom_agent_policy"].setdefault(
-            "optional_custom_agents",
-            DEFAULT_STATE["custom_agent_policy"]["optional_custom_agents"],
-        )
-        data.setdefault("coordination_policy", DEFAULT_STATE["coordination_policy"])
-        data.setdefault("wave_policy", DEFAULT_STATE["wave_policy"])
-        data.setdefault("effort_policy", DEFAULT_STATE["effort_policy"])
-        data.setdefault("integration_policy", DEFAULT_STATE["integration_policy"])
+        merge_policy_defaults(data.setdefault("custom_agent_policy", {}), DEFAULT_STATE["custom_agent_policy"])
+        merge_policy_defaults(data.setdefault("coordination_policy", {}), DEFAULT_STATE["coordination_policy"])
+        merge_policy_defaults(data.setdefault("wave_policy", {}), DEFAULT_STATE["wave_policy"])
+        merge_policy_defaults(data.setdefault("effort_policy", {}), DEFAULT_STATE["effort_policy"])
+        merge_policy_defaults(data.setdefault("integration_policy", {}), DEFAULT_STATE["integration_policy"])
         data.setdefault("phase", "initialized")
         data.setdefault("active_wave", "Wave0")
         data.setdefault("active_gate", "Gate0")
