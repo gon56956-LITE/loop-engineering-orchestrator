@@ -16,8 +16,8 @@ Default strategy: inherit first, quality first.
 ## Tier Guide
 
 - `medium`: post-acceptance formatting, path/link/file checks, queue counting, dashboard summaries, already-specified visual production, and other simple bounded work.
-- `high`: evidence research, code implementation, data analysis, document synthesis, complex visuals, cross-source reconciliation, and most analyst/reviewer work.
-- `xhigh`: reverse engineering, algorithm confirmation, high-risk math, trace-integrity review, source-conflict adjudication, repeated rework, backup analyst rescue, and final accepted-claim closure.
+- `high`: evidence research, code implementation, data analysis, document synthesis, complex visuals, cross-source reconciliation, gap-closure probes, and most analyst/reviewer work.
+- `xhigh`: reverse engineering, algorithm confirmation, high-risk math, trace-integrity review, source-conflict adjudication, repeated depth rework, backup analyst rescue, and final accepted-claim closure.
 
 If the main agent is running at `xhigh`, subagents inherit `xhigh` unless the task is simple enough to justify `medium`. Do not drop from `xhigh` to `high` just to reduce resource use.
 
@@ -37,6 +37,7 @@ Escalate above `medium` when work involves:
 
 - cross-file or cross-source dependencies
 - source conflicts
+- unclosed mandatory probes or source-chain gaps
 - reproducible calculations
 - workflow branch interpretation
 - data quality judgment
@@ -49,6 +50,7 @@ Escalate to `xhigh` when work involves:
 - high-risk math review
 - source-of-truth conflict adjudication
 - two failed rework rounds
+- repeated gap-closure attempts on the same central claim
 - final report claim integration
 - output synthesis that must preserve provenance and claim strength across many accepted artifacts
 - security, legal, medical, financial, or other high-stakes interpretation
@@ -94,5 +96,10 @@ Downgrade to `medium` only when work is:
 `queues/dependency_requests.jsonl` should include:
 
 - `requested_reasoning_effort`
+
+`queues/source_requests.jsonl` should include:
+
+- `current_evidence_stop_layer`
+- `confidence_impact_without_source`
 
 Missing effort fields are warnings for older loops, not fatal errors.

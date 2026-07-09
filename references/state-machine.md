@@ -30,6 +30,11 @@ Default states:
 - output_review
 - output_rework
 - output_accepted
+- gap_closure_active
+- source_requested
+- source_fulfilled
+- source_unavailable
+- declared_gap
 - report_integrated
 - gap
 
@@ -43,8 +48,9 @@ Rules:
 - Use rolling packet-level review inside WaveN: review starts when a packet reaches `ready_for_*_review`, not only after all execution packets finish.
 - Output synthesis is a normal Wave loop with execution, review, rework, and GateN; do not split output and output review into separate strategic waves.
 - Network loss, UI interruption, context resume, or tool transport failure moves affected agents to `resume_pending` or `suspended_by_transport`, not failed. Recover existing ownership before spawning replacements.
-- Rework against the original owner is allowed twice.
-- If still blocked, assign a backup owner twice.
-- If still blocked, mark `gap` with impact, confidence, and suggested next evidence.
+- Classify rework before applying limits: `surface_rework` gets 2 owner attempts, `depth_rework` gets 4 owner attempts, and each `gap_closure_attempt` gets 3 focused probes.
+- `systemic_template_rework` pauses similar unaccepted packets and updates the packet template or gate; it does not count against one owner's attempts.
+- If a required source is missing, unsafe, unauthorized, outside scope, or unavailable after the allowed probes, move the item to `source_requested`, `source_unavailable`, or `declared_gap` with confidence impact and suggested next evidence.
+- A reviewer can create `reviewer_discovered_gap` or `mandatory_probe_unclosed` even when the original analyst claimed the work was complete.
 - Never integrate `draft`, `*_rework`, stale, or unreviewed content into final output.
 - Hooks may update dashboards but cannot move content to `accepted`; only main-agent adjudication or explicit reviewer output can do that.

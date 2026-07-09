@@ -15,10 +15,11 @@ Default gates:
 - Internal structure/depth gate
 - Claim trace gate
 - Conflict/gap gate
+- Gap-closure/source-request gate
 - Confidence gate
 - Readability gate
 
-Acceptance requires source references for strong claims, explicit inference labels, source-chain tracing for central derived evidence, and a below-surface inspection of multi-layer artifacts when nested structure or algorithm logic may affect the answer.
+Acceptance requires source references for strong claims, explicit inference labels, source-chain tracing for central derived evidence, a below-surface inspection of multi-layer artifacts when nested structure or algorithm logic may affect the answer, and explicit `gap_ledger.md` / `source_requests.jsonl` entries for unclosed mandatory probes.
 
 ## code_implementation
 
@@ -49,6 +50,7 @@ Default gates:
 - Reproducibility gate
 - Formula/math gate
 - Visualization integrity gate when charts exist
+- Gap-closure/source-request gate
 - Caveat/confidence gate
 
 Acceptance requires schema inspection, row counts, calculation reproduction, source-chain classification for derived data, and caveats.
@@ -83,6 +85,7 @@ Default gates:
 - Output-synthesis gate when a writer agent produces the deliverable
 - Audience usefulness gate
 - Gap/conflict gate
+- Source-request visibility gate
 
 Acceptance requires a coherent narrative without losing source boundaries, provenance, claim strength, or declared gaps. Substantial text deliverables should be produced through an Output Synthesis Wave with reviewer and rework capacity, not by main-agent solo writing.
 
@@ -100,6 +103,7 @@ Default gates:
 - Claim-strength gate
 - Readability/usefulness gate
 - Gap visibility gate
+- Source-request visibility gate
 
 Acceptance requires that the output uses only accepted artifacts or declared gaps, preserves provenance and confidence, keeps limitations visible, and does not make polished prose stronger than the evidence.
 
@@ -109,6 +113,8 @@ These gates apply across profiles when a loop uses multiple packets or agents:
 
 - Rolling review gate: packet-level review starts as soon as a packet reaches a review-readiness state, without waiting for unrelated execution packets to finish.
 - Rework ownership gate: review findings return to the original owner unless ownership is formally reassigned.
+- Gap ledger gate: self-declared, reviewer-discovered, and mandatory-probe gaps are tracked with class, attempts, stop layer, confidence impact, and GateN disposition.
+- Source request gate: missing files/data/logs/user decisions are recorded in `source_requests.jsonl` instead of being hidden as weak conclusions.
 - Output integration gate: final deliverables use only accepted artifacts or declared gaps.
 
 ## specialist_investigation

@@ -17,6 +17,7 @@ The authoritative agent-facing instructions live in `SKILL.md`. This README is a
 - subwave closeouts for WaveN1/WaveN2/... without running a strategic gate per subwave
 - custom subagent routing for evidence, review, visual production, and visual skill maintenance
 - claim tracing, review/rework queues, dashboard checks, and final integration discipline
+- gap ledgers, bounded depth rework, and explicit source requests when missing evidence blocks closure
 - dependency request queues, dependency graphs, conflict logs, and shared contracts
 - heartbeat and silent-window rules that keep long-running subagents observable without premature interruption
 - network/session recovery rules that preserve original subagent ownership after manual resume
@@ -42,6 +43,8 @@ Wave flow:
 5. `WaveN1/WaveN2/...` subwaves use `Subwave Closeout`, not GateN. Closeout checks completeness and acceptability, records carry-forward items, and releases or closes subwave agents.
 
 Within a WaveN, review should be rolling: as soon as one packet reaches a review-readiness state, enqueue its reviewer and route rework back to the original owner immediately. Do not wait for every execution packet to finish unless the packet boundaries require global context.
+
+Gaps are tracked as work objects. Self-declared gaps, reviewer-discovered gaps, and unclosed mandatory probes go into `gap_ledger.md`; missing files, logs, data, live-system access, or user decisions go into `queues/source_requests.jsonl`. Stop rework when a defined source or authorization boundary is reached instead of letting agents speculate or loop forever.
 
 For substantial reports, technical briefs, executive summaries, or other text deliverables, use `output-synthesizer` inside a normal Wave loop. The writer may organize and polish accepted content, but it must not create new facts, hide gaps, change claim strength, or use unaccepted artifacts as evidence.
 
@@ -95,6 +98,7 @@ On this Windows host, `python` may not be available. Use the bundled Codex Pytho
 - `subwave_closeout_log.md`
 - `gate_log.md`
 - `claim_trace_matrix.md`
+- `gap_ledger.md`
 - `dependency_graph.md`
 - `dependency_conflicts.md`
 - `integration_plan.md`
@@ -103,7 +107,7 @@ On this Windows host, `python` may not be available. Use the bundled Codex Pytho
 - `shared_contracts/`
 - persistent status files for `main-agent` and `handoff-steward`
 
-`orchestrator_check.py` reports agent health, queue counts, missing control files, forbidden effort downgrades, model downgrade markers, and wave-scoped agents that reached terminal states without a closeout release status.
+`orchestrator_check.py` reports agent health, queue counts, open source requests, missing control files, forbidden effort downgrades, model downgrade markers, gap/source-request bookkeeping warnings, and wave-scoped agents that reached terminal states without a closeout release status.
 
 Heartbeat warnings are not termination commands. A missed heartbeat should trigger pinging and evidence checks; terminating or replacing a subagent requires main-agent review with `handoff-steward`.
 

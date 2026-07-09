@@ -14,6 +14,8 @@ TERMINAL_STATES = {
     "gap",
     "declared_gap",
     "declared-gap",
+    "source_unavailable",
+    "source_fulfilled",
     "subwave_complete",
     "subwave_closed",
     "released",
@@ -36,6 +38,20 @@ REWORK_STATES = {
     "output_rework",
     "gate_rework",
     "subwave_closeout_rework",
+    "gap_closure_active",
+}
+QUEUE_CLOSED_STATES = TERMINAL_STATES | {
+    "answered",
+    "closed",
+    "resolved",
+    "cancelled",
+    "canceled",
+    "fulfilled",
+    "provided",
+    "not_available",
+    "unavailable",
+    "accepted_limitation",
+    "carried_forward",
 }
 APPROVED_CUSTOM_AGENTS = {
     "handoff-steward",
@@ -58,6 +74,7 @@ QUEUE_NAMES = [
     "review_queue.jsonl",
     "visual_queue.jsonl",
     "rework_queue.jsonl",
+    "source_requests.jsonl",
 ]
 
 def parse_time(value):
@@ -75,7 +92,7 @@ def age_minutes(dt, now):
 
 def read_json(path):
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8-sig"))
     except Exception as exc:
         return {"_error": str(exc)}
 
@@ -83,7 +100,7 @@ def jsonl_counts(path):
     counts = {}
     if not path.exists():
         return counts
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+    for line in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
         line = line.strip()
         if not line:
             continue
@@ -181,6 +198,8 @@ def main():
     active_optional_custom_agents = set()
     ready_review_without_queue = []
     rework_without_queue = []
+    gap_declared_without_gap_id = []
+    source_request_without_gap_id = []
     for path in agents:
         data = read_json(path)
         silent_until = parse_time(data.get("silent_window_until"))
@@ -237,6 +256,10 @@ def main():
             ready_review_without_queue.append(path.stem)
         if state_name in REWORK_STATES and not data.get("rework_queue_ids"):
             rework_without_queue.append(path.stem)
+        if data.get("gap_declared") is True and not data.get("gap_ids"):
+            gap_declared_without_gap_id.append(path.stem)
+        if data.get("source_request_ids") and not data.get("gap_ids"):
+            source_request_without_gap_id.append(path.stem)
         print(f"- {path.stem}: health={health}; state={state_name}; role={role}; custom_agent={custom_agent}; lifecycle={lifecycle}; wave={wave_id}; subwave={subwave_id}; release={release_status}; profile={profile}; effort={effort}; latest_age_min={fmt_age(latest_age)}; next={data.get('next_step','')}")
     print("")
     print("## Custom Agent Configs")
@@ -270,6 +293,7 @@ def main():
         "wave_register.md",
         "source_manifest.md",
         "claim_trace_matrix.md",
+        "gap_ledger.md",
         "dependency_graph.md",
         "dependency_conflicts.md",
         "risk_register.md",
@@ -301,6 +325,10 @@ def main():
         warnings.append(f"ready_for_review_without_review_queue: {', '.join(ready_review_without_queue)}")
     if rework_without_queue:
         warnings.append(f"rework_state_without_rework_queue: {', '.join(rework_without_queue)}")
+    if gap_declared_without_gap_id:
+        warnings.append(f"gap_declared_without_gap_id: {', '.join(gap_declared_without_gap_id)}")
+    if source_request_without_gap_id:
+        warnings.append(f"source_request_without_gap_id: {', '.join(source_request_without_gap_id)}")
     invalid_queues = [
         f"{name}:{counts['invalid_json']}"
         for name, counts in queue_counts.items()
@@ -322,7 +350,7 @@ def main():
     dependency_request_counts = queue_counts.get("dependency_requests.jsonl", {})
     active_dependency_requests = sum(
         count for status, count in dependency_request_counts.items()
-        if status not in TERMINAL_STATES and status not in {"answered", "closed", "resolved", "cancelled", "canceled"}
+        if status not in QUEUE_CLOSED_STATES
     )
     dependency_coordinator_active = "dependency-coordinator" in active_optional_custom_agents
     if active_dependency_requests and not dependency_coordinator_active:
@@ -331,6 +359,15 @@ def main():
         warnings.append(f"dependency_coordinator_config_not_ready: {custom_agent_findings.get('dependency-coordinator', 'missing')}")
     if active_dependency_requests and not (root / "dependency_graph.md").exists():
         warnings.append("active_dependency_requests_missing_dependency_graph")
+    source_request_counts = queue_counts.get("source_requests.jsonl", {})
+    active_source_requests = sum(
+        count for status, count in source_request_counts.items()
+        if status not in QUEUE_CLOSED_STATES
+    )
+    if active_source_requests:
+        warnings.append(f"active_source_requests_require_gate_disposition: {active_source_requests}")
+    if active_source_requests and not (root / "gap_ledger.md").exists():
+        warnings.append("active_source_requests_missing_gap_ledger")
     if any((root / "shared_contracts").glob("*.md")) if (root / "shared_contracts").exists() else False:
         if not (root / "dependency_graph.md").exists():
             warnings.append("shared_contracts_missing_dependency_graph")

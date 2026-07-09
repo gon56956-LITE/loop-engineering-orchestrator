@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DEFAULT_STATE = {
-    "version": 3,
+    "version": 4,
     "created_at": None,
     "phase": "initialized",
     "active_wave": "Wave0",
@@ -72,6 +72,34 @@ DEFAULT_STATE = {
         "accepted_or_declared_gap_only": True,
         "preserve_original_owner_rework": True
     },
+    "gap_policy": {
+        "ledger_required": True,
+        "source_requests_required": True,
+        "gap_origins": [
+            "self_declared_gap",
+            "reviewer_discovered_gap",
+            "mandatory_probe_unclosed",
+        ],
+        "gap_classes": [
+            "provenance_gap",
+            "mechanism_gap",
+            "source_missing_gap",
+            "contradiction_gap",
+            "scope_gap",
+            "authority_gap",
+            "runtime_live_system_gap",
+            "calculation_gap",
+            "internal_structure_gap",
+            "confidence_gap",
+        ],
+        "rework_budgets": {
+            "surface_rework": 2,
+            "depth_rework": 4,
+            "gap_closure_attempt": 3,
+        },
+        "systemic_template_rework_counts_against_owner": False,
+        "stop_conditions_require_source_request": True,
+    },
 }
 ROOT_FILES = [
     "agent_roster.md",
@@ -79,6 +107,7 @@ ROOT_FILES = [
     "wave_register.md",
     "claim_trace_matrix.md",
     "trace_matrix.md",
+    "gap_ledger.md",
     "dependency_graph.md",
     "dependency_conflicts.md",
     "source_manifest.md",
@@ -103,6 +132,7 @@ QUEUE_FILES = [
     "review_queue.jsonl",
     "visual_queue.jsonl",
     "rework_queue.jsonl",
+    "source_requests.jsonl",
 ]
 
 def now_iso():
@@ -194,6 +224,12 @@ def initial_content(name):
             "- Use `dependency_requests.jsonl` / `dependency_responses.jsonl` for normal cross-agent questions.",
             "- Use `shared_contracts/` for versioned schemas, source maps, terminology, or interface contracts consumed by multiple agents.",
             "",
+            "## Gap Closure And Source Requests",
+            "",
+            "- Track self-declared, reviewer-discovered, and mandatory-probe gaps in `gap_ledger.md`.",
+            "- Use class-based budgets: surface rework 2 attempts, depth rework 4 attempts, gap closure 3 focused attempts per gap.",
+            "- When evidence cannot be reached under the user's constraints, write `queues/source_requests.jsonl` instead of speculating.",
+            "",
             "## Stop Conditions",
             "",
         ],
@@ -217,8 +253,20 @@ def initial_content(name):
             "",
             "## Missing Or Unavailable Sources",
             "",
+            "## Active Source Requests",
+            "",
             "## Unsafe Or Live Surfaces",
             "",
+        ],
+        "gap_ledger.md": [
+            "# Gap Ledger",
+            "",
+            f"Initialized: {initialized}",
+            "",
+            "Use this ledger for self-declared gaps, reviewer-discovered gaps, and mandatory probes that remain unclosed.",
+            "",
+            "| Gap ID | Origin | Class | Owner | Reviewer | Wave/Subwave | Affected Claim Or Artifact | Current Evidence Stop Layer | Attempted Probes | Remaining Question | Closure Criteria | Source Request ID | Confidence Impact | Status | Gate Disposition |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
         ],
         "wave0_digest.md": [
             "# Wave0 Digest",
@@ -306,6 +354,8 @@ def initial_content(name):
             "",
             "## Declared Gaps",
             "",
+            "## Active Source Requests",
+            "",
             "## Active Blockers",
             "",
             "## Next Actions",
@@ -341,6 +391,12 @@ def status_content(agent_id, role, custom_agent):
         "review_queue_ids": [],
         "rework_queue_ids": [],
         "rolling_review_notes": [],
+        "gap_ids": [],
+        "source_request_ids": [],
+        "surface_rework_count": 0,
+        "depth_rework_count": 0,
+        "gap_closure_attempts": {},
+        "stop_conditions": [],
         "silent_window_until": None,
         "silent_window_reason": None,
         "rework_count": 0,
@@ -386,6 +442,7 @@ def main():
         merge_policy_defaults(data.setdefault("wave_policy", {}), DEFAULT_STATE["wave_policy"])
         merge_policy_defaults(data.setdefault("effort_policy", {}), DEFAULT_STATE["effort_policy"])
         merge_policy_defaults(data.setdefault("integration_policy", {}), DEFAULT_STATE["integration_policy"])
+        merge_policy_defaults(data.setdefault("gap_policy", {}), DEFAULT_STATE["gap_policy"])
         data.setdefault("phase", "initialized")
         data.setdefault("active_wave", "Wave0")
         data.setdefault("active_gate", "Gate0")

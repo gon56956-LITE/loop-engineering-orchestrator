@@ -18,7 +18,7 @@ A successful loop has seven durable surfaces:
 3. Intake, source, risk, wave, and orchestration plans that define the work before agents run.
 4. Wave-scoped work packets that tell each agent exactly what it owns.
 5. Claim trace matrix that links claims to evidence, logic, outputs, and review status.
-6. Review/rework gates that stop weak work before final integration.
+6. Review/rework/gap gates that stop weak work before final integration and expose missing source needs.
 7. Handoff and integration files that let a new session resume without guesswork.
 
 ## Custom Agent Roster
@@ -111,7 +111,9 @@ If missing information could cause the wrong files, data, live systems, or behav
 - `queues/review_queue.jsonl`: review tasks.
 - `queues/visual_queue.jsonl`: visual production/review tasks.
 - `queues/rework_queue.jsonl`: queued rework assignments and backup-owner transfers.
+- `queues/source_requests.jsonl`: explicit requests for missing files, systems, logs, data, user decisions, or source authority needed to close a gap.
 - `claim_trace_matrix.md`: claim/evidence/logic/review trace spine.
+- `gap_ledger.md`: first-class gap register with origin, type, attempts, stop condition, source-chain break, source request, confidence impact, and closure criteria.
 - `dependency_graph.md`: cross-agent dependency graph, blocked-by relationships, active shared contracts, and escalation points.
 - `dependency_conflicts.md`: unresolved contradictions, circular dependencies, incompatible contract changes, and reviewer/GateN disposition.
 - `agent_roster.md`: persistent agents, wave-scoped agents, reserved rework agents, and role routing.
@@ -181,6 +183,7 @@ For each evidence packet over multi-layer files, include a depth contract:
 - treat tables, command outputs, report rows, screenshots, cached files, generated artifacts, UI displays, prior summaries, and logs as possible intermediates until their provenance is classified
 - identify uninspected lower layers as explicit gaps
 - require a reviewer to check depth before acceptance
+- record any unclosed mandatory probe in `gap_ledger.md`; if a needed source is missing, add a matching item to `queues/source_requests.jsonl` rather than continuing by speculation
 
 Each work packet should include:
 
@@ -190,6 +193,7 @@ Each work packet should include:
 - Packet-level review readiness states, rolling review queue route, expected reviewer boundary, and immediate rework owner.
 - Depth contract for multi-layer artifacts, including required internal structure map and input -> transformation -> output trace.
 - Provenance contract for evidence claims, including whether cited evidence is a root source, direct record, derived/transformed output, summary/cache/snapshot, or unknown.
+- Gap contract, including expected mandatory probes, gap ledger route, source request route, and stop conditions for unavailable evidence.
 - Mechanism narrative requirement for research-like work: explain the mechanism in natural human language after the trace, not as raw extraction notes.
 - Inherited model/effort policy, allowed downgrade only to `medium` for simple bounded work, escalation triggers, concurrency notes, and silent-window expectations.
 - Dependencies on earlier packets, specialist requests, visual tasks, or user decisions.
@@ -230,6 +234,40 @@ When multiple agents need a shared concept, create a versioned file under `share
 
 If two agents disagree about source meaning, data shape, mechanism, or output interpretation, log the contradiction in `dependency_conflicts.md` and route it to a reviewer or GateN decision. Do not let agents settle material conflicts through untracked side discussion.
 
+## Gap Closure And Source Request Rules
+
+Treat unresolved depth questions as first-class work objects, not as prose caveats hidden inside an artifact. Use `gap_ledger.md` whenever an analyst, reviewer, mandatory probe, or GateN decision identifies a question that must be closed, declared, or exposed to the user.
+
+Gap origins:
+
+- `self_declared_gap`: the owner knows the answer is incomplete.
+- `reviewer_discovered_gap`: the reviewer finds a missing layer, weak source chain, contradiction, or unsupported claim.
+- `mandatory_probe_unclosed`: the work packet required a source-chain, mechanism, internal-structure, calculation, or authority probe that remains incomplete.
+
+Gap classes include `provenance_gap`, `mechanism_gap`, `source_missing_gap`, `contradiction_gap`, `scope_gap`, `authority_gap`, `runtime_live_system_gap`, `calculation_gap`, `internal_structure_gap`, and `confidence_gap`.
+
+Each `gap_ledger.md` row should include: `gap_id`, origin, class, owner, reviewer, wave/subwave, affected claim or artifact, current evidence stop layer, attempted probes, remaining question, closure criteria, source request id if any, confidence impact, status, and GateN disposition.
+
+Use bounded rework budgets by issue class:
+
+- `surface_rework`: up to 2 owner attempts for wording, formatting, missing references, or simple checklist misses; backup owner may get up to 2 attempts if the original owner is unavailable or ineffective.
+- `depth_rework`: up to 4 owner attempts when the issue is provenance, mechanism, internal structure, source-chain tracing, contradiction resolution, or multi-layer analysis depth.
+- `gap_closure_attempt`: up to 3 focused attempts per gap, where each attempt must name the probe target, inspected evidence, result, and remaining stop layer.
+- `systemic_template_rework`: does not count against one analyst's attempts. Pause similar unaccepted packets, fix the packet template or acceptance gate, then resume with the revised template.
+
+Stop rework and expose the blocker instead of looping when any stop condition is reached:
+
+- the required source is absent from the provided workspace or unavailable under the user's constraints
+- live systems, hardware, databases, networks, or external writes are forbidden or unsafe
+- authorization is missing for a source, command, connector, or user decision
+- the available source family has been exhaustively checked and the authority chain still breaks
+- sources conflict and no authoritative tie-breaker is available
+- the next required step would be speculative, destructive, or outside the packet scope
+
+When a stop condition depends on missing input, append a JSON object to `queues/source_requests.jsonl` with: `id`, `created_at`, `gap_id`, `requester`, `needed_source`, `why_needed`, `current_evidence_stop_layer`, `expected_use`, `acceptable_alternatives`, `confidence_impact_without_source`, `status`, `needed_by`, and `user_action_needed`. Keep the gap open until the source is provided, an acceptable alternative closes it, or GateN declares it as an accepted limitation.
+
+An analyst's statement that "no gap remains" is not sufficient for acceptance. The reviewer must independently check the mandatory probes and may create `reviewer_discovered_gap` or `mandatory_probe_unclosed` entries. A final deliverable may include declared gaps and active source requests, but it must label them visibly and must not convert them into conclusions.
+
 ## Agent Status Rules
 
 Each status file must include:
@@ -239,7 +277,7 @@ Each status file must include:
 - Optional `heartbeat_interval_minutes`, `last_heartbeat_at`, `silent_window_until`, `silent_window_reason`, `last_ping_at`, `ping_count`, and `do_not_interrupt_before` for long processing.
 - Optional `depends_on`, `waiting_on`, `blocking_requests`, `provided_outputs`, `consumed_contracts`, and `coordination_notes` for cross-agent dependency tracking.
 - Optional `ready_for_review_at`, `review_queue_ids`, `rework_queue_ids`, and `rolling_review_notes` for Wave-internal rolling review.
-- Optional `rework_count`, `accepted`, and `gap_declared`.
+- Optional `rework_count`, `surface_rework_count`, `depth_rework_count`, `gap_closure_attempts`, `gap_ids`, `source_request_ids`, `stop_conditions`, `accepted`, and `gap_declared`.
 
 Use `lifecycle: persistent` for `main-agent`, `handoff-steward`, and any activated `dependency-coordinator`; use `lifecycle: wave_scoped` for other subagents.
 
@@ -287,7 +325,7 @@ Do not kill work by elapsed time alone. Use status timestamps, owned artifact mt
 
 ## Request Queue Rules
 
-Use `dependency_requests.jsonl` for normal cross-agent dependencies inside a wave. Use `specialist_requests.jsonl` only when the request needs a specialist role or domain expert beyond the existing packet owners. Both queues avoid untracked side chats and give the main agent or `dependency-coordinator` a prioritizable surface.
+Use `dependency_requests.jsonl` for normal cross-agent dependencies inside a wave. Use `specialist_requests.jsonl` only when the request needs a specialist role or domain expert beyond the existing packet owners. Use `source_requests.jsonl` when a gap cannot be closed without missing files, data, logs, user decisions, connectors, live-system access, or an authoritative tie-breaker. These queues avoid untracked side chats and give the main agent or `dependency-coordinator` a prioritizable surface.
 
 Each dependency request should include:
 
@@ -307,6 +345,10 @@ Each specialist response should include:
 
 - `request_id`, `responder`, `status`, `answer`, `evidence_pointers`, `confidence`, `gaps`, `followups`.
 
+Each source request should include:
+
+- `id`, `created_at`, `gap_id`, `requester`, `needed_source`, `why_needed`, `current_evidence_stop_layer`, `expected_use`, `acceptable_alternatives`, `confidence_impact_without_source`, `status`, `needed_by`, and `user_action_needed`.
+
 Examples of `specialty`: `reverse_engineering`, `math_check`, `api_contract`, `source_lookup`, `visual_design`, `security_review`, `domain_expert`.
 
 ## Review Gates
@@ -325,10 +367,11 @@ Map gates to the task profile:
 - Analysis-depth gate: the work answers the relevant why/how/what/when/where/who questions.
 - Explain-back gate: a technical human can reconstruct the mechanism, evidence chain, limitations, and practical meaning from the narrative without reading raw extraction notes.
 - Readability/usefulness gate: the target audience can use the result.
+- Gap-closure gate: mandatory probes are either closed with evidence, tracked in `gap_ledger.md`, or connected to an active/declared source request with confidence impact.
 - Output-synthesis gate: final text deliverables use only accepted artifacts or declared gaps, preserve provenance and claim strength, and do not hide uncertainty in polished prose.
 - Artifact gate: files open, links resolve, diagrams/charts render, outputs are complete.
 
-Rework limit: original owner gets up to 2 rework attempts. If still blocked, assign a backup owner up to 2 attempts. If still unresolved, mark a gap with impact and confidence.
+Rework limits are class-based. Use the gap closure rules above: 2 attempts for `surface_rework`, 4 attempts for `depth_rework`, 3 focused attempts per `gap_closure_attempt`, and separate handling for `systemic_template_rework`. When a stop condition is reached, record the gap and source request instead of forcing more rework.
 
 Reviewers classify issues and cite evidence; they should not silently absorb the fix into central integration unless the owner is unavailable and the ownership change is recorded. Keep the original owner attached to the artifact until it is accepted, declared as a gap, or formally reassigned.
 
@@ -364,8 +407,10 @@ Before final integration, confirm:
 - WaveN review runs as rolling packet-level review where possible, without waiting for all execution packets to finish
 - each completed subwave has a closeout entry and its subagents are closed, released, or explicitly carried forward
 - active dependency requests are answered, escalated, or logged as blockers before GateN
+- active source requests are fulfilled, declared as accepted limitations, or carried as visible blockers before GateN
 - shared contracts consumed by accepted artifacts have owners, versions, and source basis
 - dependency conflicts are resolved by review/GateN or declared as gaps
+- `gap_ledger.md` records every self-declared, reviewer-discovered, or mandatory-probe gap with closure status and confidence impact
 - all accepted artifacts passed their gates
 - substantial final text deliverables were produced inside an Output Synthesis Wave or were explicitly small enough for main-agent integration
 - unresolved claims are marked as gaps, not quietly integrated
