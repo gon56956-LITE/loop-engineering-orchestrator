@@ -29,6 +29,7 @@ Use custom agents from `C:\Users\gon56956\.codex\agents` when spawning subagents
 - `dependency-coordinator`: optional persistent coordination agent for high-coupling waves. Use it to maintain dependency queues, shared contracts, waiting-on state, dependency graphs, cycle warnings, duplicate requests, and small escalation packets for the main agent. Do not use it to accept/reject artifacts, reassign owners, change task scope, adjudicate evidence conflicts, or integrate final content.
 - `evidence-analyst`: wave-scoped execution agent for source-bound technical evidence work across PDFs, WI/docs, HTML/Markdown, CSV/XLSX, .cal files, logs, configs, recipes, test outputs, and source-code tracing.
 - `reviewer`: wave-scoped independent review/test/QA agent. Use to decide whether outputs satisfy requirements, evidence quality, code/test expectations, visual QA, skill compliance, or gate readiness.
+- `output-synthesizer`: wave-scoped execution agent for final or interim text deliverables such as Markdown/HTML reports, technical briefs, executive summaries, synthesis narratives, and handoff packages. Use it after accepted evidence and `integration_plan.md` exist. It may organize and write; it must not create new facts, strengthen weak claims, adjudicate conflicts, or use unaccepted artifacts as if they were accepted.
 - `visual-producer`: wave-scoped execution agent for one-off charts, diagrams, PPT/PPTX, HTML slide decks, PNG posts, image batches, visual reports, and presentation-ready artifacts.
 - `visual-skill-maintainer`: wave-scoped specialist for modifying reusable visual generation skills, renderers, recipes, palettes, fixtures, galleries, tests, and release flows.
 
@@ -90,7 +91,8 @@ If missing information could cause the wrong files, data, live systems, or behav
 12. Route findings back to the original owner for rework unless the rework limit is reached or the owner is explicitly reassigned.
 13. GateN: main agent adjudicates accepted outputs, rejected outputs, declared gaps, and downstream plan changes with `handoff-steward`; update `gate_log.md`, `handoff.md`, and next wave packets.
 14. Write `integration_plan.md` before final assembly, mapping each final section or output to accepted artifacts or declared gaps.
-15. Integrate only accepted or declared-gap content into the final deliverable, then refresh `handoff.md`.
+15. For substantial final text deliverables, run an Output Synthesis Wave with execution, rolling review, and rework capacity instead of having the main agent write the full report directly.
+16. Integrate only accepted or declared-gap content into the final deliverable, then refresh `handoff.md`.
 
 ## Directory Contract
 
@@ -154,6 +156,18 @@ Every WaveN must reserve:
 - review/test agents for acceptance checks
 - rework agents or backup owners for fixes after review
 
+Within a WaveN, do not wait for all execution agents to finish before starting review. Use rolling packet-level review:
+
+- each packet declares readiness states such as `ready_for_trace_review`, `ready_for_accuracy_review`, `ready_for_depth_review`, or `ready_for_readability_review`
+- when one packet reaches a readiness state, enqueue its reviewer immediately in `review_queue.jsonl`
+- reviewer packets should match the execution packet's topic, source family, artifact boundary, or output section so they can run without global Wave completion
+- rework findings return immediately to the original owner through `rework_queue.jsonl`; do not batch all rework until the end of the Wave
+- other execution packets continue unless the review finding exposes a systemic packet-template problem, source-authority problem, or unsafe assumption
+- if early review reveals a systemic flaw, the main agent may pause similar unaccepted packets, revise the packet template, and record the correction before work continues
+- GateN still runs only after all packets are accepted, rejected, declared as gaps, or explicitly carried forward/blocking
+
+For substantial final text output, use an Output Synthesis Wave rather than main-agent solo writing. The Wave must still be a complete loop: execution by `output-synthesizer`, review by `reviewer`, rework by the original `output-synthesizer` owner or backup writer, and one GateN decision. Inputs are limited to accepted artifacts, declared gaps, `claim_trace_matrix.md`, `dependency_graph.md` when relevant, and `integration_plan.md`. The output agent may improve structure, wording, and narrative flow, but it must preserve claim strength, provenance, limitations, and gap labels. Visual artifacts remain owned by `visual-producer`; reusable visual-tool changes remain owned by `visual-skill-maintainer`.
+
 For broad research with many topics, split work by topic or source family and assign parallel evidence packets plus parallel reviewer packets. Do not rely on one human review pass to discover shallow analysis across many topics. Review packets should check depth, source coverage, and internal-logic trace for the same topic boundary as the evidence packet.
 
 When the topic class is new, the source structure is unfamiliar, or prior analyst output was too shallow, run one calibration packet before scaling parallel work. The calibration packet must produce a depth trace and mechanism narrative, pass reviewer explain-back, and become the packet template for the remaining topics. Do not launch a large parallel wave from an unproven shallow packet shape.
@@ -172,6 +186,7 @@ Each work packet should include:
 - `packet_id`, `wave_id`, optional `subwave_id`, role, custom agent type, owner, reviewer, rework owner, status path, and owned artifact path.
 - Mission question, in-scope sources, out-of-scope sources, and hard constraints.
 - Expected output shape, claim-trace obligations, acceptance gates, and rework route.
+- Packet-level review readiness states, rolling review queue route, expected reviewer boundary, and immediate rework owner.
 - Depth contract for multi-layer artifacts, including required internal structure map and input -> transformation -> output trace.
 - Provenance contract for evidence claims, including whether cited evidence is a root source, direct record, derived/transformed output, summary/cache/snapshot, or unknown.
 - Mechanism narrative requirement for research-like work: explain the mechanism in natural human language after the trace, not as raw extraction notes.
@@ -222,6 +237,7 @@ Each status file must include:
 - Use optional `subwave_id` for subwave agents and `release_status` for wave-scoped agents at closeout. Valid closeout release statuses are `released`, `closed`, and `carried_forward`.
 - Optional `heartbeat_interval_minutes`, `last_heartbeat_at`, `silent_window_until`, `silent_window_reason`, `last_ping_at`, `ping_count`, and `do_not_interrupt_before` for long processing.
 - Optional `depends_on`, `waiting_on`, `blocking_requests`, `provided_outputs`, `consumed_contracts`, and `coordination_notes` for cross-agent dependency tracking.
+- Optional `ready_for_review_at`, `review_queue_ids`, `rework_queue_ids`, and `rolling_review_notes` for Wave-internal rolling review.
 - Optional `rework_count`, `accepted`, and `gap_declared`.
 
 Use `lifecycle: persistent` for `main-agent`, `handoff-steward`, and any activated `dependency-coordinator`; use `lifecycle: wave_scoped` for other subagents.
@@ -308,6 +324,7 @@ Map gates to the task profile:
 - Analysis-depth gate: the work answers the relevant why/how/what/when/where/who questions.
 - Explain-back gate: a technical human can reconstruct the mechanism, evidence chain, limitations, and practical meaning from the narrative without reading raw extraction notes.
 - Readability/usefulness gate: the target audience can use the result.
+- Output-synthesis gate: final text deliverables use only accepted artifacts or declared gaps, preserve provenance and claim strength, and do not hide uncertainty in polished prose.
 - Artifact gate: files open, links resolve, diagrams/charts render, outputs are complete.
 
 Rework limit: original owner gets up to 2 rework attempts. If still blocked, assign a backup owner up to 2 attempts. If still unresolved, mark a gap with impact and confidence.
@@ -343,11 +360,13 @@ Before final integration, confirm:
 - `orchestration_plan.md`, `source_manifest.md`, `risk_register.md`, and `integration_plan.md` exist and match current scope
 - Wave0/Gate0 are complete before formal Wave1 starts
 - each WaveN has execution, review/test, and rework capacity assigned before it starts
+- WaveN review runs as rolling packet-level review where possible, without waiting for all execution packets to finish
 - each completed subwave has a closeout entry and its subagents are closed, released, or explicitly carried forward
 - active dependency requests are answered, escalated, or logged as blockers before GateN
 - shared contracts consumed by accepted artifacts have owners, versions, and source basis
 - dependency conflicts are resolved by review/GateN or declared as gaps
 - all accepted artifacts passed their gates
+- substantial final text deliverables were produced inside an Output Synthesis Wave or were explicitly small enough for main-agent integration
 - unresolved claims are marked as gaps, not quietly integrated
 - final deliverables reference only existing reviewed artifacts
 - handoff files are current enough for a new session to resume safely

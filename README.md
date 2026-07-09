@@ -12,6 +12,8 @@ The authoritative agent-facing instructions live in `SKILL.md`. This README is a
 - optional persistent `dependency-coordinator` support for high-coupling waves
 - Wave0/Gate0 discovery before formal work starts
 - Wave1/Wave2/...WaveN execution loops with GateN adjudication
+- rolling packet-level review inside each WaveN so completed packets do not idle while other packets continue
+- Output Synthesis Waves for substantial text deliverables, with execution, review, rework, and GateN inside the same wave
 - subwave closeouts for WaveN1/WaveN2/... without running a strategic gate per subwave
 - custom subagent routing for evidence, review, visual production, and visual skill maintenance
 - claim tracing, review/rework queues, dashboard checks, and final integration discipline
@@ -39,6 +41,10 @@ Wave flow:
 4. `GateN` accepts, rejects, declares gaps, and updates downstream plans.
 5. `WaveN1/WaveN2/...` subwaves use `Subwave Closeout`, not GateN. Closeout checks completeness and acceptability, records carry-forward items, and releases or closes subwave agents.
 
+Within a WaveN, review should be rolling: as soon as one packet reaches a review-readiness state, enqueue its reviewer and route rework back to the original owner immediately. Do not wait for every execution packet to finish unless the packet boundaries require global context.
+
+For substantial reports, technical briefs, executive summaries, or other text deliverables, use `output-synthesizer` inside a normal Wave loop. The writer may organize and polish accepted content, but it must not create new facts, hide gaps, change claim strength, or use unaccepted artifacts as evidence.
+
 Effort policy:
 
 - inherit the main agent model and reasoning effort by default
@@ -53,6 +59,7 @@ The skill expects these local custom agents under `C:\Users\gon56956\.codex\agen
 - `handoff-steward`
 - `dependency-coordinator` (optional; activate for high-coupling waves)
 - `evidence-analyst`
+- `output-synthesizer`
 - `reviewer`
 - `visual-producer`
 - `visual-skill-maintainer`

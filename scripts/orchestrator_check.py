@@ -22,6 +22,7 @@ FORBIDDEN_EFFORTS = {"low", "light"}
 APPROVED_CUSTOM_AGENTS = {
     "handoff-steward",
     "evidence-analyst",
+    "output-synthesizer",
     "reviewer",
     "visual-producer",
     "visual-skill-maintainer",
