@@ -434,7 +434,7 @@ def main():
             p.write_text("", encoding="utf-8")
     state = root / "orchestrator_state.json"
     if state.exists():
-        data = json.loads(state.read_text(encoding="utf-8"))
+        data = json.loads(state.read_text(encoding="utf-8-sig"))
         data.setdefault("profiles", [])
         data.setdefault("persistent_agents", DEFAULT_STATE["persistent_agents"])
         merge_policy_defaults(data.setdefault("custom_agent_policy", {}), DEFAULT_STATE["custom_agent_policy"])

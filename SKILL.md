@@ -353,9 +353,9 @@ Examples of `specialty`: `reverse_engineering`, `math_check`, `api_contract`, `s
 
 ## Review Gates
 
-Use this default state machine:
+Use this default state machine. See `references/state-machine.md` for the full state list and rules.
 
-`draft -> ready_for_trace_review -> trace_rework|ready_for_accuracy_review -> accuracy_rework|ready_for_depth_review -> depth_rework|ready_for_readability_review -> readability_rework|accepted -> visual_ready -> visual_accepted -> report_integrated`
+`draft -> ready_for_trace_review -> trace_rework|ready_for_accuracy_review -> accuracy_rework|ready_for_depth_review -> depth_rework|source_requested|source_fulfilled|source_unavailable|declared_gap|ready_for_readability_review -> readability_rework|accepted -> visual_ready -> visual_accepted|output_ready -> output_review -> output_rework|output_accepted -> report_integrated`
 
 Map gates to the task profile:
 
