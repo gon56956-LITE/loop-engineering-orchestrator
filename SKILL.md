@@ -9,12 +9,12 @@ Use this skill when the work is too long, risky, cross-functional, or evidence-h
 
 ## Core Idea
 
-The main agent is the orchestrator. `handoff-steward` is the persistent continuity partner. Other subagents are wave-scoped workers, analysts, reviewers, visual producers, maintainers, testers, or rework owners. Hooks and scripts only observe state and run checks; they never replace main-agent judgment.
+The main agent is the final orchestrator and gate decision owner. `handoff-steward` is the persistent continuity partner. Large or tightly coupled waves may also use a persistent `dependency-coordinator` to keep cross-agent requests moving without loading every operational detail into the main agent. Other subagents are wave-scoped workers, analysts, reviewers, visual producers, maintainers, testers, or rework owners. Hooks and scripts only observe state and run checks; they never replace main-agent judgment.
 
 A successful loop has six durable surfaces:
 
 1. `agent_work/` control directory for state and handoff.
-2. Persistent control pair: main agent plus `handoff-steward` active from start to finish.
+2. Persistent control pair: main agent plus `handoff-steward` active from start to finish, with optional `dependency-coordinator` for high-coupling waves.
 3. Intake, source, risk, wave, and orchestration plans that define the work before agents run.
 4. Wave-scoped work packets that tell each agent exactly what it owns.
 5. Claim trace matrix that links claims to evidence, logic, outputs, and review status.
@@ -25,7 +25,8 @@ A successful loop has six durable surfaces:
 
 Use custom agents from `C:\Users\gon56956\.codex\agents` when spawning subagents. These TOML files are the authoritative role definitions; this skill only routes work to them and adds loop-level controls. Do not define shadow subagents inside the skill.
 
-- `handoff-steward`: persistent loop checkpoint and continuity agent. Keep active from loop start through final handoff. Use for accepted-vs-unresolved state, stop states, authorization boundaries, current artifact paths, next-action queues, and startup prompts. Do not use it as the reviewer or primary analyst.
+- `handoff-steward`: persistent loop checkpoint and continuity agent. Keep active from loop start through final handoff. Use for accepted-vs-unresolved state, stop states, authorization boundaries, current artifact paths, next-action queues, and startup prompts. It may summarize dependency state for handoff, but do not use it as the dependency dispatcher, reviewer, or primary analyst.
+- `dependency-coordinator`: optional persistent coordination agent for high-coupling waves. Use it to maintain dependency queues, shared contracts, waiting-on state, dependency graphs, cycle warnings, duplicate requests, and small escalation packets for the main agent. Do not use it to accept/reject artifacts, reassign owners, change task scope, adjudicate evidence conflicts, or integrate final content.
 - `evidence-analyst`: wave-scoped execution agent for source-bound technical evidence work across PDFs, WI/docs, HTML/Markdown, CSV/XLSX, .cal files, logs, configs, recipes, test outputs, and source-code tracing.
 - `reviewer`: wave-scoped independent review/test/QA agent. Use to decide whether outputs satisfy requirements, evidence quality, code/test expectations, visual QA, skill compliance, or gate readiness.
 - `visual-producer`: wave-scoped execution agent for one-off charts, diagrams, PPT/PPTX, HTML slide decks, PNG posts, image batches, visual reports, and presentation-ready artifacts.
@@ -76,7 +77,7 @@ If missing information could cause the wrong files, data, live systems, or behav
 ## Standard Workflow
 
 1. Initialize `agent_work/` with `scripts/init_loop.py <agent_work_dir> [comma_separated_profiles]`.
-2. Start the persistent control pair: main agent plus `handoff-steward`. Keep both active until final handoff.
+2. Start the persistent control pair: main agent plus `handoff-steward`. Keep both active until final handoff. If the wave plan has more than 3 execution agents, cross-agent blocking requests, shared contracts with multiple consumers, or likely circular dependencies, activate an optional persistent `dependency-coordinator`.
 3. Write `agent_roster.md`, `orchestration_plan.md`, `source_manifest.md`, `wave_register.md`, and `risk_register.md`.
 4. Plan and run Wave0 for boundary discovery, source inventory, task partitioning, risk discovery, and formal packet recommendations.
 5. Gate0: main agent adjudicates Wave0 with `handoff-steward`, combines the user prompt, hard constraints, Wave0 output, and discovered evidence, then revises task details before formal work starts.
@@ -85,7 +86,7 @@ If missing information could cause the wrong files, data, live systems, or behav
 8. Spawn wave-scoped subagents only after the user has authorized subagents or parallel agent work. Close or release subwave agents at Subwave Closeout, and close or release parent-wave agents after GateN accepts, declares gaps, or formally carries items forward.
 9. Give each subagent a status file, owned artifact path, inherited model/effort policy, acceptance criteria, source boundaries, claim-trace obligations, and review or rework path.
 10. Require heartbeat updates every 10 minutes or a bounded silent window declaration.
-11. Use `scripts/orchestrator_check.py <agent_work_dir>` between waits to inspect health, queues, missing controls, downgrade warnings, and quality warnings.
+11. Use `scripts/orchestrator_check.py <agent_work_dir>` between waits to inspect health, queues, missing controls, downgrade warnings, dependency warnings, and quality warnings.
 12. Route findings back to the original owner for rework unless the rework limit is reached or the owner is explicitly reassigned.
 13. GateN: main agent adjudicates accepted outputs, rejected outputs, declared gaps, and downstream plan changes with `handoff-steward`; update `gate_log.md`, `handoff.md`, and next wave packets.
 14. Write `integration_plan.md` before final assembly, mapping each final section or output to accepted artifacts or declared gaps.
@@ -98,13 +99,18 @@ If missing information could cause the wrong files, data, live systems, or behav
 - `status/*.json`: one heartbeat/status file per agent.
 - `artifacts/*.md`: analyst/worker outputs and accepted evidence summaries.
 - `work_packets/*.md`: main-agent assignments.
+- `shared_contracts/*.md`: versioned shared source maps, schemas, interface contracts, terminology maps, or assumptions consumed by multiple agents.
 - `waves/`: optional per-wave folders for packets, outputs, completeness checks, and gate prep.
+- `queues/dependency_requests.jsonl`: cross-agent requests where one worker needs information, artifacts, decisions, or contract updates from another worker.
+- `queues/dependency_responses.jsonl`: responses to cross-agent dependency requests.
 - `queues/specialist_requests.jsonl`: requests for specialist help.
 - `queues/specialist_responses.jsonl`: specialist answers.
 - `queues/review_queue.jsonl`: review tasks.
 - `queues/visual_queue.jsonl`: visual production/review tasks.
 - `queues/rework_queue.jsonl`: queued rework assignments and backup-owner transfers.
 - `claim_trace_matrix.md`: claim/evidence/logic/review trace spine.
+- `dependency_graph.md`: cross-agent dependency graph, blocked-by relationships, active shared contracts, and escalation points.
+- `dependency_conflicts.md`: unresolved contradictions, circular dependencies, incompatible contract changes, and reviewer/GateN disposition.
 - `agent_roster.md`: persistent agents, wave-scoped agents, reserved rework agents, and role routing.
 - `orchestration_plan.md`: mission, constraints, profiles, waves, roles, dependencies, and stop conditions.
 - `source_manifest.md`: authoritative sources, supporting sources, missing sources, and unsafe/live surfaces.
@@ -156,6 +162,8 @@ For each evidence packet over multi-layer files, include a depth contract:
 
 - map outer file structure and relevant inner structures
 - trace source fields or inputs through transformations, algorithms, formulas, recipes, code paths, or log phases to outputs
+- run a source-chain challenge for central claims: observed artifact -> producing step/tool/person/process -> upstream input/source record -> transformation logic -> final claim
+- treat tables, command outputs, report rows, screenshots, cached files, generated artifacts, UI displays, prior summaries, and logs as possible intermediates until their provenance is classified
 - identify uninspected lower layers as explicit gaps
 - require a reviewer to check depth before acceptance
 
@@ -165,11 +173,46 @@ Each work packet should include:
 - Mission question, in-scope sources, out-of-scope sources, and hard constraints.
 - Expected output shape, claim-trace obligations, acceptance gates, and rework route.
 - Depth contract for multi-layer artifacts, including required internal structure map and input -> transformation -> output trace.
+- Provenance contract for evidence claims, including whether cited evidence is a root source, direct record, derived/transformed output, summary/cache/snapshot, or unknown.
 - Mechanism narrative requirement for research-like work: explain the mechanism in natural human language after the trace, not as raw extraction notes.
 - Inherited model/effort policy, allowed downgrade only to `medium` for simple bounded work, escalation triggers, concurrency notes, and silent-window expectations.
 - Dependencies on earlier packets, specialist requests, visual tasks, or user decisions.
 
 Do not spawn two agents with overlapping write ownership. If two agents need the same source set, separate their questions or make one a reviewer.
+
+## Dependency Coordination Rules
+
+Prefer dependency design before dependency firefighting. If one packet cannot safely start until another packet produces an artifact, contract, source map, schema, or decision, split the work into subwaves or declare an explicit `depends_on` relationship instead of launching both as independent parallel work.
+
+Use a persistent `dependency-coordinator` when any of these are true:
+
+- one WaveN has more than 3 execution agents
+- two or more agents are blocked on each other's outputs
+- shared contracts are being consumed by multiple agents
+- dependency requests start to crowd the main agent's context
+- circular dependencies or conflicting assumptions are likely
+
+The `dependency-coordinator` owns operational coordination only. It may:
+
+- maintain `dependency_graph.md`, `dependency_requests.jsonl`, `dependency_responses.jsonl`, and shared-contract indexes
+- track `waiting_on`, `blocking_requests`, `provided_outputs`, and `consumed_contracts` in status files
+- ping target agents for dependency responses within heartbeat and silent-window rules
+- detect duplicate requests, stale blockers, circular waits, and missing shared-contract owners
+- prepare concise escalation packets for the main agent when a scope, ownership, evidence, or GateN decision is required
+
+The `dependency-coordinator` must not:
+
+- accept, reject, or integrate artifacts
+- change task scope, source authority, or owner assignment
+- adjudicate evidence conflicts
+- bypass reviewer gates or rework ownership
+- replace `handoff-steward` continuity duties
+
+`handoff-steward` should record dependency state only at the handoff layer: current blockers, active contracts, accepted dependency resolutions, unresolved escalation packets, and restart instructions. It should not become the live dependency dispatcher.
+
+When multiple agents need a shared concept, create a versioned file under `shared_contracts/` instead of letting each agent infer its own local version. A shared contract should name its owner, consumers, version, source basis, open questions, and change history. Contract changes that affect active agents must be routed through `dependency_requests.jsonl` and recorded in `dependency_graph.md`.
+
+If two agents disagree about source meaning, data shape, mechanism, or output interpretation, log the contradiction in `dependency_conflicts.md` and route it to a reviewer or GateN decision. Do not let agents settle material conflicts through untracked side discussion.
 
 ## Agent Status Rules
 
@@ -178,9 +221,10 @@ Each status file must include:
 - `agent_id`, `role`, `custom_agent`, `lifecycle`, `wave_id`, `profile`, `reasoning_effort`, `effort_rationale`, `model_policy`, `state`, `current_artifact`, `last_progress_at`, `next_step`, `blockers`.
 - Use optional `subwave_id` for subwave agents and `release_status` for wave-scoped agents at closeout. Valid closeout release statuses are `released`, `closed`, and `carried_forward`.
 - Optional `heartbeat_interval_minutes`, `last_heartbeat_at`, `silent_window_until`, `silent_window_reason`, `last_ping_at`, `ping_count`, and `do_not_interrupt_before` for long processing.
+- Optional `depends_on`, `waiting_on`, `blocking_requests`, `provided_outputs`, `consumed_contracts`, and `coordination_notes` for cross-agent dependency tracking.
 - Optional `rework_count`, `accepted`, and `gap_declared`.
 
-Use `lifecycle: persistent` for `main-agent` and `handoff-steward`; use `lifecycle: wave_scoped` for other subagents.
+Use `lifecycle: persistent` for `main-agent`, `handoff-steward`, and any activated `dependency-coordinator`; use `lifecycle: wave_scoped` for other subagents.
 
 ## Heartbeat And Non-Interruption Policy
 
@@ -226,14 +270,23 @@ Do not kill work by elapsed time alone. Use status timestamps, owned artifact mt
 
 ## Request Queue Rules
 
-Use `specialist_requests.jsonl` for cross-agent dependencies. This avoids untracked side chats and gives the main agent a queue to prioritize.
+Use `dependency_requests.jsonl` for normal cross-agent dependencies inside a wave. Use `specialist_requests.jsonl` only when the request needs a specialist role or domain expert beyond the existing packet owners. Both queues avoid untracked side chats and give the main agent or `dependency-coordinator` a prioritizable surface.
 
-Each request should include:
+Each dependency request should include:
+
+- `id`, `created_at`, `requester`, `target_agent`, `priority`, `status`.
+- `wave_id`, optional `subwave_id`, `requested_reasoning_effort`, `question_or_need`, `context`, `evidence_pointers`, `expected_output`, `blocking_claims`, `needed_by`, and `escalate_to_main_if`.
+
+Each dependency response should include:
+
+- `request_id`, `responder`, `status`, `answer_or_output`, `artifact_pointers`, `evidence_pointers`, `confidence`, `gaps`, `followups`, and `contract_updates`.
+
+Each specialist request should include:
 
 - `id`, `created_at`, `requester`, `specialty`, `priority`, `status`.
 - `requested_reasoning_effort`, `question`, `context`, `evidence_pointers`, `expected_output`, `blocking_claims`.
 
-Each response should include:
+Each specialist response should include:
 
 - `request_id`, `responder`, `status`, `answer`, `evidence_pointers`, `confidence`, `gaps`, `followups`.
 
@@ -248,6 +301,7 @@ Use this default state machine:
 Map gates to the task profile:
 
 - Evidence/source gate: every strong claim has a source or is labeled inference.
+- Provenance gate: central claims do not treat derived intermediates as source-of-truth unless the upstream chain is traced or the gap is declared with confidence impact.
 - Trace/logic gate: inputs, transformations, outputs, and claims form a coherent chain.
 - Internal-structure gate: multi-layer files were inspected below the surface layer, and algorithm/control-flow claims include source-backed mechanisms.
 - Accuracy/math/test gate: calculations, code, tests, thresholds, and comparisons are correct.
@@ -290,6 +344,9 @@ Before final integration, confirm:
 - Wave0/Gate0 are complete before formal Wave1 starts
 - each WaveN has execution, review/test, and rework capacity assigned before it starts
 - each completed subwave has a closeout entry and its subagents are closed, released, or explicitly carried forward
+- active dependency requests are answered, escalated, or logged as blockers before GateN
+- shared contracts consumed by accepted artifacts have owners, versions, and source basis
+- dependency conflicts are resolved by review/GateN or declared as gaps
 - all accepted artifacts passed their gates
 - unresolved claims are marked as gaps, not quietly integrated
 - final deliverables reference only existing reviewed artifacts

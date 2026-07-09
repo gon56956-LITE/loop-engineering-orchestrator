@@ -9,11 +9,13 @@ The authoritative agent-facing instructions live in `SKILL.md`. This README is a
 `loop-engineering-orchestrator` coordinates long-running work with:
 
 - persistent main-agent orchestration and `handoff-steward` continuity
+- optional persistent `dependency-coordinator` support for high-coupling waves
 - Wave0/Gate0 discovery before formal work starts
 - Wave1/Wave2/...WaveN execution loops with GateN adjudication
 - subwave closeouts for WaveN1/WaveN2/... without running a strategic gate per subwave
 - custom subagent routing for evidence, review, visual production, and visual skill maintenance
 - claim tracing, review/rework queues, dashboard checks, and final integration discipline
+- dependency request queues, dependency graphs, conflict logs, and shared contracts
 - heartbeat and silent-window rules that keep long-running subagents observable without premature interruption
 - network/session recovery rules that preserve original subagent ownership after manual resume
 
@@ -21,7 +23,13 @@ Use it when the work has multiple evidence sources, multiple agents, review/rewo
 
 ## Core Model
 
-The main agent and `handoff-steward` stay active from start to finish. Other agents are wave-scoped and should be released, closed, or explicitly carried forward when their wave or subwave closes.
+The main agent and `handoff-steward` stay active from start to finish. Large waves can also activate a persistent `dependency-coordinator` so cross-agent requests, waiting-on state, and shared contracts do not crowd the main agent context. Other agents are wave-scoped and should be released, closed, or explicitly carried forward when their wave or subwave closes.
+
+Role boundary:
+
+- `handoff-steward` preserves continuity, stop state, accepted-vs-unresolved state, and restart instructions.
+- `dependency-coordinator` manages dependency queues, shared contracts, waiting-on state, duplicate requests, stale blockers, and escalation packets.
+- The main agent still owns Gate0/GateN decisions, scope changes, owner reassignment, final integration, and evidence-conflict adjudication.
 
 Wave flow:
 
@@ -43,6 +51,7 @@ Effort policy:
 The skill expects these local custom agents under `C:\Users\gon56956\.codex\agents`. Those TOML files are the authoritative role definitions; the skill should route to them, not maintain looser duplicate subagent definitions:
 
 - `handoff-steward`
+- `dependency-coordinator` (optional; activate for high-coupling waves)
 - `evidence-analyst`
 - `reviewer`
 - `visual-producer`
@@ -79,9 +88,12 @@ On this Windows host, `python` may not be available. Use the bundled Codex Pytho
 - `subwave_closeout_log.md`
 - `gate_log.md`
 - `claim_trace_matrix.md`
+- `dependency_graph.md`
+- `dependency_conflicts.md`
 - `integration_plan.md`
 - `handoff.md`
 - queue files under `queues/`
+- `shared_contracts/`
 - persistent status files for `main-agent` and `handoff-steward`
 
 `orchestrator_check.py` reports agent health, queue counts, missing control files, forbidden effort downgrades, model downgrade markers, and wave-scoped agents that reached terminal states without a closeout release status.

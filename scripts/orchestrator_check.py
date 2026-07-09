@@ -26,7 +26,12 @@ APPROVED_CUSTOM_AGENTS = {
     "visual-producer",
     "visual-skill-maintainer",
 }
+OPTIONAL_CUSTOM_AGENTS = {
+    "dependency-coordinator",
+}
 QUEUE_NAMES = [
+    "dependency_requests.jsonl",
+    "dependency_responses.jsonl",
     "specialist_requests.jsonl",
     "specialist_responses.jsonl",
     "re_requests.jsonl",
@@ -82,13 +87,15 @@ def newest_mtime(paths):
 def inspect_custom_agents(state):
     policy = state.get("custom_agent_policy", {})
     approved = set(policy.get("approved_custom_agents", [])) or APPROVED_CUSTOM_AGENTS
+    optional = set(policy.get("optional_custom_agents", [])) or OPTIONAL_CUSTOM_AGENTS
+    all_known = approved | optional
     agent_dir = policy.get("authoritative_agent_dir", "~/.codex/agents")
     root = Path(agent_dir).expanduser()
     findings = {}
-    for name in sorted(approved):
+    for name in sorted(all_known):
         path = root / f"{name}.toml"
         if not path.exists():
-            findings[name] = "missing"
+            findings[name] = "missing_optional" if name in optional else "missing"
             continue
         try:
             data = path.read_bytes()
@@ -102,7 +109,7 @@ def inspect_custom_agents(state):
                 findings[name] = "ok"
         except Exception as exc:
             findings[name] = f"parse_error:{exc}"
-    return approved, findings
+    return approved, optional, findings
 
 def fmt_age(value):
     return "unknown" if value is None else f"{value:.1f}"
@@ -116,7 +123,8 @@ def main():
     heartbeat = float(state.get("heartbeat_minutes", 10))
     effort_policy = state.get("effort_policy", {})
     persistent_agents = state.get("persistent_agents", ["main-agent", "handoff-steward"])
-    approved_custom_agents, custom_agent_findings = inspect_custom_agents(state)
+    approved_custom_agents, optional_custom_agents, custom_agent_findings = inspect_custom_agents(state)
+    known_custom_agents = approved_custom_agents | optional_custom_agents | {"main-agent"}
     now = datetime.now(timezone.utc)
     print("# Loop Orchestrator Dashboard")
     print(f"root: {root}")
@@ -140,6 +148,7 @@ def main():
     bad_persistent_lifecycle = []
     terminal_wave_agent_without_release = []
     unapproved_custom_agents = []
+    active_optional_custom_agents = set()
     for path in agents:
         data = read_json(path)
         silent_until = parse_time(data.get("silent_window_until"))
@@ -182,7 +191,9 @@ def main():
         if path.stem in persistent_agents and data.get("lifecycle") != "persistent":
             bad_persistent_lifecycle.append(path.stem)
         custom_agent = data.get("custom_agent", "")
-        if custom_agent and custom_agent != "main-agent" and custom_agent not in approved_custom_agents:
+        if custom_agent in optional_custom_agents:
+            active_optional_custom_agents.add(custom_agent)
+        if custom_agent and custom_agent not in known_custom_agents:
             unapproved_custom_agents.append(f"{path.stem}:{custom_agent}")
         lifecycle = data.get("lifecycle", "")
         wave_id = data.get("wave_id", "")
@@ -222,6 +233,8 @@ def main():
         "wave_register.md",
         "source_manifest.md",
         "claim_trace_matrix.md",
+        "dependency_graph.md",
+        "dependency_conflicts.md",
         "risk_register.md",
         "recovery_log.md",
         "subwave_closeout_log.md",
@@ -247,13 +260,32 @@ def main():
         warnings.append(f"persistent_agent_wrong_lifecycle: {', '.join(bad_persistent_lifecycle)}")
     if terminal_wave_agent_without_release:
         warnings.append(f"terminal_wave_agent_without_release_status: {', '.join(terminal_wave_agent_without_release)}")
-    missing_or_invalid_custom_agents = [
-        f"{name}:{result}" for name, result in custom_agent_findings.items() if result != "ok"
-    ]
+    missing_or_invalid_custom_agents = []
+    for name, result in custom_agent_findings.items():
+        if result == "ok":
+            continue
+        if result == "missing_optional" and name not in active_optional_custom_agents:
+            continue
+        missing_or_invalid_custom_agents.append(f"{name}:{result}")
     if missing_or_invalid_custom_agents:
         warnings.append(f"custom_agent_config_not_ready: {', '.join(missing_or_invalid_custom_agents)}")
     if unapproved_custom_agents:
         warnings.append(f"unapproved_custom_agent_in_status: {', '.join(unapproved_custom_agents)}")
+    dependency_request_counts = jsonl_counts(root / "queues" / "dependency_requests.jsonl")
+    active_dependency_requests = sum(
+        count for status, count in dependency_request_counts.items()
+        if status not in TERMINAL_STATES and status not in {"answered", "closed", "resolved", "cancelled", "canceled"}
+    )
+    dependency_coordinator_active = "dependency-coordinator" in active_optional_custom_agents
+    if active_dependency_requests and not dependency_coordinator_active:
+        warnings.append(f"active_dependency_requests_without_coordinator: {active_dependency_requests}")
+    if dependency_coordinator_active and custom_agent_findings.get("dependency-coordinator") != "ok":
+        warnings.append(f"dependency_coordinator_config_not_ready: {custom_agent_findings.get('dependency-coordinator', 'missing')}")
+    if active_dependency_requests and not (root / "dependency_graph.md").exists():
+        warnings.append("active_dependency_requests_missing_dependency_graph")
+    if any((root / "shared_contracts").glob("*.md")) if (root / "shared_contracts").exists() else False:
+        if not (root / "dependency_graph.md").exists():
+            warnings.append("shared_contracts_missing_dependency_graph")
     for folder in ["workflows", "figures", "semantic"]:
         candidate = root.parent / folder
         if candidate.exists():

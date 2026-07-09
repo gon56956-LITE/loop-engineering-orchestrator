@@ -24,8 +24,23 @@ DEFAULT_STATE = {
             "visual-producer",
             "visual-skill-maintainer",
         ],
+        "optional_custom_agents": [
+            "dependency-coordinator",
+        ],
         "shadow_skill_subagents_allowed": False,
         "fallback_requires_user_authorization": True,
+    },
+    "coordination_policy": {
+        "dependency_coordinator_optional": True,
+        "activate_dependency_coordinator_when": [
+            "wave_execution_agents_gt_3",
+            "cross_agent_blocking_requests_exist",
+            "shared_contracts_have_multiple_consumers",
+            "dependency_requests_crowd_main_context",
+            "circular_dependencies_likely",
+        ],
+        "handoff_steward_is_not_dependency_dispatcher": True,
+        "main_agent_retains_gate_decisions": True,
     },
     "wave_policy": {
         "wave0_required": True,
@@ -62,6 +77,8 @@ ROOT_FILES = [
     "wave_register.md",
     "claim_trace_matrix.md",
     "trace_matrix.md",
+    "dependency_graph.md",
+    "dependency_conflicts.md",
     "source_manifest.md",
     "wave0_digest.md",
     "risk_register.md",
@@ -75,6 +92,8 @@ ROOT_FILES = [
     "hooks_log.md",
 ]
 QUEUE_FILES = [
+    "dependency_requests.jsonl",
+    "dependency_responses.jsonl",
     "specialist_requests.jsonl",
     "specialist_responses.jsonl",
     "re_requests.jsonl",
@@ -100,6 +119,10 @@ def initial_content(name):
             "",
             "- main-agent: orchestrator and final gate decision owner",
             "- handoff-steward: continuity, stop-state, accepted-vs-unresolved, and next-action owner",
+            "",
+            "## Optional Persistent Coordination",
+            "",
+            "- dependency-coordinator: dependency queue, shared-contract, waiting-on, and escalation-packet owner for high-coupling waves; it does not accept artifacts, adjudicate evidence, reassign owners, or integrate final content",
             "",
             "## Wave-Scoped Custom Agents",
             "",
@@ -131,6 +154,12 @@ def initial_content(name):
             "## Profiles And Waves",
             "",
             "## Roles And Dependencies",
+            "",
+            "## Dependency Coordination",
+            "",
+            "- Activate `dependency-coordinator` only when cross-agent dependencies are large enough to crowd the main agent context.",
+            "- Use `dependency_requests.jsonl` / `dependency_responses.jsonl` for normal cross-agent questions.",
+            "- Use `shared_contracts/` for versioned schemas, source maps, terminology, or interface contracts consumed by multiple agents.",
             "",
             "## Stop Conditions",
             "",
@@ -176,6 +205,29 @@ def initial_content(name):
             f"Initialized: {initialized}",
             "",
             "| Risk | Impact | Mitigation | Owner | Verification | Status |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ],
+        "dependency_graph.md": [
+            "# Dependency Graph",
+            "",
+            f"Initialized: {initialized}",
+            "",
+            "## Active Dependencies",
+            "",
+            "| Request | Requester | Target | Blocking | Needed By | Status | Escalation |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
+            "",
+            "## Shared Contracts",
+            "",
+            "| Contract | Owner | Version | Consumers | Source Basis | Status |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ],
+        "dependency_conflicts.md": [
+            "# Dependency Conflicts",
+            "",
+            f"Initialized: {initialized}",
+            "",
+            "| Conflict | Agents | Subject | Evidence Pointers | Reviewer/Gate Disposition | Status |",
             "| --- | --- | --- | --- | --- | --- |",
         ],
         "recovery_log.md": [
@@ -246,6 +298,12 @@ def status_content(agent_id, role, custom_agent):
         "last_progress_at": now,
         "next_step": "Maintain loop continuity" if agent_id == "handoff-steward" else "Plan and adjudicate Wave0",
         "blockers": [],
+        "depends_on": [],
+        "waiting_on": [],
+        "blocking_requests": [],
+        "provided_outputs": [],
+        "consumed_contracts": [],
+        "coordination_notes": [],
         "silent_window_until": None,
         "silent_window_reason": None,
         "rework_count": 0,
@@ -270,7 +328,7 @@ def main():
         return 2
     root = Path(sys.argv[1]).resolve()
     profiles = [p.strip() for p in sys.argv[2].split(",") if p.strip()] if len(sys.argv) == 3 else []
-    for rel in ["status", "queues", "artifacts", "work_packets", "waves", "reports"]:
+    for rel in ["status", "queues", "artifacts", "work_packets", "shared_contracts", "waves", "reports"]:
         (root / rel).mkdir(parents=True, exist_ok=True)
     for name in ROOT_FILES:
         p = root / name
@@ -287,6 +345,11 @@ def main():
         data.setdefault("profiles", [])
         data.setdefault("persistent_agents", DEFAULT_STATE["persistent_agents"])
         data.setdefault("custom_agent_policy", DEFAULT_STATE["custom_agent_policy"])
+        data["custom_agent_policy"].setdefault(
+            "optional_custom_agents",
+            DEFAULT_STATE["custom_agent_policy"]["optional_custom_agents"],
+        )
+        data.setdefault("coordination_policy", DEFAULT_STATE["coordination_policy"])
         data.setdefault("wave_policy", DEFAULT_STATE["wave_policy"])
         data.setdefault("effort_policy", DEFAULT_STATE["effort_policy"])
         data.setdefault("integration_policy", DEFAULT_STATE["integration_policy"])
