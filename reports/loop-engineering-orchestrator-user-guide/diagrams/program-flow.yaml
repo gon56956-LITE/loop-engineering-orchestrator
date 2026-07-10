@@ -1,0 +1,182 @@
+version: workflow-contract/v1
+title: Loop Engineering 的高层工作流
+summary: 用紧凑的 Wave 卡片展示从前置摸底、专题执行、缺口关闭到输出交付的完整顺序。
+scope:
+  in:
+  - 展示项目级 Wave 序列和 Gate 决策
+  - 区分 Wave0、WaveN、Gap Closure Wave 和 Output Synthesis Wave
+  out:
+  - 不展开单个 Wave 内部的执行、审查和返工细节
+actors:
+- id: user
+  label: 用户
+  type: person
+- id: main-agent
+  label: 主 agent
+  type: system
+- id: wave-team
+  label: Wave 团队
+  type: system
+artifacts:
+- id: workbench
+  label: agent_work 工作台
+  type: document
+- id: accepted-results
+  label: 已接受成果
+  type: output
+- id: final-output
+  label: 最终交付物
+  type: output
+nodes:
+- id: start
+  label: 用户提出复杂任务
+  type: start
+  actor: user
+  inputs: []
+  outputs: []
+- id: initialize-workbench
+  label: 建立计划和控制工作台
+  type: task
+  actor: main-agent
+  inputs: []
+  outputs:
+  - workbench
+- id: wave-zero
+  label: Wave0 完整循环：摸清资料、边界和风险
+  type: task
+  actor: wave-team
+  inputs:
+  - workbench
+  outputs: []
+- id: gate-zero
+  label: Gate0：边界是否足以开工？
+  type: decision
+  actor: main-agent
+  inputs: []
+  outputs: []
+- id: wave-n
+  label: Wave1 到 WaveN 完整循环：执行专题工作
+  type: task
+  actor: wave-team
+  inputs: []
+  outputs:
+  - accepted-results
+- id: gate-n
+  label: GateN：成果可接受吗？
+  type: decision
+  actor: main-agent
+  inputs:
+  - accepted-results
+  outputs: []
+- id: gap-closure
+  label: Gap Closure Wave 完整循环：深挖未关闭缺口
+  type: task
+  actor: wave-team
+  inputs: []
+  outputs: []
+- id: more-work
+  label: 还需要其他专题 Wave 吗？
+  type: decision
+  actor: main-agent
+  inputs: []
+  outputs: []
+- id: output-wave
+  label: Output Synthesis Wave：撰写、审查和返工
+  type: task
+  actor: wave-team
+  inputs:
+  - accepted-results
+  outputs:
+  - final-output
+- id: final-gate
+  label: Final Gate：交付物可发布吗？
+  type: task
+  actor: main-agent
+  inputs:
+  - final-output
+  outputs: []
+- id: finish
+  label: 交付最终成果
+  type: end
+  actor: user
+  inputs:
+  - final-output
+  outputs: []
+edges:
+- id: start-to-initialize-workbench
+  from: start
+  to: initialize-workbench
+  type: sequence
+- id: initialize-workbench-to-wave-zero
+  from: initialize-workbench
+  to: wave-zero
+  type: sequence
+- id: wave-zero-to-gate-zero
+  from: wave-zero
+  to: gate-zero
+  type: sequence
+- id: gate-zero-to-wave-zero
+  from: gate-zero
+  to: wave-zero
+  type: exception
+  label: 需补充
+- id: gate-zero-to-wave-n
+  from: gate-zero
+  to: wave-n
+  type: conditional
+  condition: 可以开工
+- id: wave-n-to-gate-n
+  from: wave-n
+  to: gate-n
+  type: sequence
+- id: gate-n-to-gap-closure
+  from: gate-n
+  to: gap-closure
+  type: conditional
+  condition: 有关键缺口
+- id: gap-closure-to-gate-n
+  from: gap-closure
+  to: gate-n
+  type: sequence
+- id: gate-n-to-more-work
+  from: gate-n
+  to: more-work
+  type: conditional
+  condition: 当前成果接受
+- id: more-work-to-wave-n
+  from: more-work
+  to: wave-n
+  type: conditional
+  condition: 是
+- id: more-work-to-output-wave
+  from: more-work
+  to: output-wave
+  type: conditional
+  condition: 否
+- id: output-wave-to-final-gate
+  from: output-wave
+  to: final-gate
+  type: sequence
+- id: final-gate-to-finish
+  from: final-gate
+  to: finish
+  type: sequence
+constraints:
+- id: every-wave-is-complete
+  label: Wave0、WaveN、Gap Closure Wave 和 Output Synthesis Wave 都是包含执行、独立审查和返工的完整 Wave Loop。
+  applies_to:
+  - wave-zero
+  - wave-n
+  - gap-closure
+  - output-wave
+- id: wave-zero-work-type
+  label: Wave0 的编号表示前置摸底这种工作类型，不表示它由主 agent 亲自执行或缺少审查。
+  applies_to:
+  - wave-zero
+- id: output-review-same-wave
+  label: 输出撰写、输出审查和返工属于同一个 Output Synthesis Wave。
+  applies_to:
+  - output-wave
+assumptions:
+- 高层图把每个完整 Wave Loop 压缩成一个动作卡片，内部流程由通用 Wave Loop 图展开。
+open_questions: []

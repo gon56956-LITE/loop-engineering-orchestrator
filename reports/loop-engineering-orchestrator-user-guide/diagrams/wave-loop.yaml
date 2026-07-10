@@ -1,16 +1,13 @@
 version: workflow-contract/v1
-title: 一次完整 Wave Loop 怎么运行
-summary: 展示从准备、执行、审查、返工到最终整合的完整闭环。
+title: 一个通用 Wave Loop 的内部流程
+summary: 展开任意 Wave 内部从分派、依赖协调、执行、滚动审查、原 owner 返工到 Gate 和交接的流程。
 scope:
   in:
-  - 解释 loop-engineering-orchestrator 的核心运行顺序
-  - 突出主 agent、执行 agent、reviewer、handoff-steward 的分工
+  - 展示单个 Wave 的完整闭环
+  - 展示执行 agents、review agents、dependency-coordinator 和 handoff-steward 的分工
   out:
-  - 不描述某个具体项目的技术细节
+  - 不区分 Wave0、WaveN 或 Output Synthesis Wave 的具体工作内容
 actors:
-- id: user
-  label: 用户
-  type: person
 - id: main-agent
   label: 主 agent
   type: system
@@ -20,130 +17,124 @@ actors:
 - id: reviewers
   label: Review agents
   type: system
+- id: coordinator
+  label: Dependency coordinator
+  type: system
 - id: handoff
   label: Handoff steward
   type: system
 artifacts:
-- id: agent-work
-  label: agent_work 控制目录
+- id: wave-brief
+  label: Wave brief
   type: document
 - id: work-packets
   label: 工作包
   type: document
-- id: accepted-artifacts
-  label: 已接受成果
-  type: output
 - id: review-findings
   label: 审查意见
   type: decision_record
+- id: accepted-artifacts
+  label: 已接受成果
+  type: output
 nodes:
 - id: start
-  label: 用户提出复杂任务
+  label: Wave brief 已确认
   type: start
-  actor: user
-  inputs: []
-  outputs: []
-- id: initialize-control
-  label: 建立 agent_work 和计划文件
-  type: task
-  actor: main-agent
-  outputs:
-  - agent-work
-  inputs: []
-- id: wave-zero
-  label: Wave0 先摸清边界和资料
-  type: task
   actor: main-agent
   inputs:
-  - agent-work
+  - wave-brief
   outputs: []
-- id: gate-zero
-  label: Gate0 确认范围和工作包
-  type: task
-  actor: main-agent
-  outputs:
-  - work-packets
-  inputs: []
 - id: assign-work
-  label: 分派执行、审查和返工角色
+  label: 分派执行、审查和返工 owner
   type: task
   actor: main-agent
   inputs:
+  - wave-brief
+  outputs:
+  - work-packets
+- id: coordinate-dependencies
+  label: 协调跨 agent 依赖和共享约定
+  type: task
+  actor: coordinator
+  inputs:
   - work-packets
   outputs: []
-- id: execute-packets
-  label: 执行 agents 完成各自工作
+- id: execute-packet
+  label: 执行 agent 完成一个工作包
   type: task
   actor: workers
-  inputs: []
+  inputs:
+  - work-packets
   outputs: []
 - id: rolling-review
-  label: 完成一个包就立即审查
+  label: 工作包完成后立即独立审查
   type: task
   actor: reviewers
+  inputs: []
   outputs:
   - review-findings
-  inputs: []
 - id: review-result
-  label: 审查是否通过？
+  label: 这个工作包通过吗？
   type: decision
   actor: reviewers
-  inputs: []
+  inputs:
+  - review-findings
   outputs: []
 - id: owner-rework
-  label: 原 owner 返工，不由主 agent 代修
+  label: 原 owner 按意见返工
   type: task
   actor: workers
-  inputs: []
+  inputs:
+  - review-findings
   outputs: []
 - id: record-accepted
   label: 记录已接受成果和证据链
   type: task
   actor: main-agent
+  inputs: []
   outputs:
   - accepted-artifacts
-  inputs: []
-- id: gate-n
-  label: GateN 统一裁决本轮结果
+- id: all-packets-accepted
+  label: 本 Wave 的工作包都已处理？
+  type: decision
+  actor: main-agent
+  inputs:
+  - accepted-artifacts
+  outputs: []
+- id: wave-gate
+  label: Wave Gate 统一裁决
   type: task
   actor: main-agent
-  inputs: []
+  inputs:
+  - accepted-artifacts
   outputs: []
 - id: handoff-update
-  label: 更新 handoff，方便续接
+  label: 更新 handoff 和下一步
   type: task
   actor: handoff
   inputs: []
   outputs: []
 - id: finish
-  label: 可以进入下一轮或最终报告
+  label: Wave 完成并进入后续流程
   type: end
   actor: main-agent
   inputs: []
   outputs: []
 edges:
-- id: start-to-initialize-control
+- id: start-to-assign-work
   from: start
-  to: initialize-control
-  type: sequence
-- id: initialize-control-to-wave-zero
-  from: initialize-control
-  to: wave-zero
-  type: sequence
-- id: wave-zero-to-gate-zero
-  from: wave-zero
-  to: gate-zero
-  type: sequence
-- id: gate-zero-to-assign-work
-  from: gate-zero
   to: assign-work
   type: sequence
-- id: assign-work-to-execute-packets
+- id: assign-work-to-coordinate-dependencies
   from: assign-work
-  to: execute-packets
+  to: coordinate-dependencies
   type: sequence
-- id: execute-packets-to-rolling-review
-  from: execute-packets
+- id: coordinate-dependencies-to-execute-packet
+  from: coordinate-dependencies
+  to: execute-packet
+  type: sequence
+- id: execute-packet-to-rolling-review
+  from: execute-packet
   to: rolling-review
   type: sequence
 - id: rolling-review-to-review-result
@@ -154,7 +145,7 @@ edges:
   from: review-result
   to: owner-rework
   type: conditional
-  condition: 需要修改
+  condition: 需返工
 - id: owner-rework-to-rolling-review
   from: owner-rework
   to: rolling-review
@@ -164,12 +155,22 @@ edges:
   to: record-accepted
   type: conditional
   condition: 通过
-- id: record-accepted-to-gate-n
+- id: record-accepted-to-all-packets-accepted
   from: record-accepted
-  to: gate-n
+  to: all-packets-accepted
   type: sequence
-- id: gate-n-to-handoff-update
-  from: gate-n
+- id: all-packets-accepted-to-coordinate-dependencies
+  from: all-packets-accepted
+  to: coordinate-dependencies
+  type: conditional
+  condition: 否
+- id: all-packets-accepted-to-wave-gate
+  from: all-packets-accepted
+  to: wave-gate
+  type: conditional
+  condition: 是
+- id: wave-gate-to-handoff-update
+  from: wave-gate
   to: handoff-update
   type: sequence
 - id: handoff-update-to-finish
@@ -178,14 +179,19 @@ edges:
   type: sequence
 constraints:
 - id: rolling-review-rule
-  label: 不必等所有执行 agents 都完成才开始 review
+  label: 每个可审查工作包一完成就进入 review，不等待所有执行 agents 一起结束。
   applies_to:
   - rolling-review
-- id: main-agent-gate-owner
-  label: 主 agent 负责 Gate 决策，但不吸收所有细节
+- id: owner-preserving-rework
+  label: 返工回到原 owner，主 agent 不代替执行 agent 修改成果。
   applies_to:
-  - gate-zero
-  - gate-n
+  - owner-rework
+- id: main-agent-gate-owner
+  label: 主 agent 只负责范围、分派、记录和 Gate 裁决，不亲自承担 Wave 的执行或独立审查。
+  applies_to:
+  - assign-work
+  - record-accepted
+  - wave-gate
 assumptions:
-- 图中把多个执行包合并成一个示意节点，实际项目可以有多个并行工作包。
+- 图按单个工作包的流转来表达滚动审查；同一 Wave 中其他执行 agents 可以继续并行工作。
 open_questions: []

@@ -1,6 +1,6 @@
 version: workflow-contract/v1
-title: 遇到疑点或缺资料时怎么处理
-summary: 说明系统如何继续追问、何时停止返工，以及怎样把缺失资料暴露给用户。
+title: 深挖证据和暴露缺口的工作原则
+summary: 说明 agent 如何避免浅层结论，持续追查来源链，并在追不到时公开缺口。
 scope:
   in:
   - 解释 gap ledger、source request 和有界返工

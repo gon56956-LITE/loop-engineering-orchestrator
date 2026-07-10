@@ -453,17 +453,21 @@
       <div class="wrap">
         <h2>完整工作流程</h2>
         <p class="section-intro">
-          这个 skill 的核心不是“让很多 agent 同时跑”，而是让每一轮工作都有开始、执行、审查、返工、裁决和交接。下面这张图展示一次标准 Wave Loop。
+          Loop Engineering 有两个观察层级：先看多个完整 Wave 怎样组成项目，再看任意一个 Wave 内部怎样执行、滚动审查、返工、裁决和交接。Wave0 也是完整 Wave，只是工作类型是前置摸底。
         </p>
         <div class="diagram">
-          <img src="diagrams/wave-loop.svg" alt="一次完整 Wave Loop 的流程图">
-          <p class="diagram-caption">图 2：一次完整 Wave Loop。合同源文件：<code>diagrams/wave-loop.yaml</code>。</p>
+          <img src="diagrams/program-flow.svg" alt="Loop Engineering 高层工作流">
+          <p class="diagram-caption">图 2：项目级 Wave 序列。每个 Wave 卡片都代表一个完整循环。合同源文件：<code>diagrams/program-flow.yaml</code>。</p>
+        </div>
+        <div class="diagram" style="margin-top: 20px;">
+          <img src="diagrams/wave-loop.svg" alt="一个通用 Wave Loop 的内部流程图">
+          <p class="diagram-caption">图 3：一个通用 Wave Loop 的内部流程。合同源文件：<code>diagrams/wave-loop.yaml</code>。</p>
         </div>
         <div class="grid three" style="margin-top: 20px;">
           <div class="card">
             <span class="tag blue">Wave0</span>
             <h3>先摸清边界</h3>
-            <p>正式开工前，先确认资料、风险、工作包、角色和限制。它不是最终答案。</p>
+            <p>执行 agents 完成资料、风险和边界摸底，review agents 独立审查，原 owner 负责返工；它与其他 Wave 一样完整。</p>
           </div>
           <div class="card">
             <span class="tag green">WaveN</span>
@@ -473,7 +477,7 @@
           <div class="card">
             <span class="tag amber">GateN</span>
             <h3>最后统一裁决</h3>
-            <p>主 agent 决定哪些成果接受、哪些返工、哪些作为 gap 或限制写入后续。</p>
+            <p>主 agent 决定哪些成果接受、哪些返工、哪些进入专门的 Gap Closure Wave，或作为限制写入后续。</p>
           </div>
         </div>
       </div>
@@ -520,6 +524,11 @@
               <td>不直接接管原 owner 的工作，除非主 agent 记录了转交。</td>
             </tr>
             <tr>
+              <td><strong>visual-producer</strong></td>
+              <td>视觉交付物制作人，负责一次性的图表、流程图、PPT、HTML 视觉报告和图片输出。</td>
+              <td>不维护底层视觉 skill，也不能用视觉包装掩盖证据缺口。</td>
+            </tr>
+            <tr>
               <td><strong>output-synthesizer</strong></td>
               <td>报告写作者，只把已接受成果和已声明限制写成正式文本。</td>
               <td>不能新编事实，不能把不确定内容写得更确定。</td>
@@ -531,13 +540,13 @@
 
     <section>
       <div class="wrap">
-        <h2>遇到疑点、缺资料或反复返工怎么办</h2>
+        <h2>深挖证据和暴露缺口的工作原则</h2>
         <p class="section-intro">
-          这是这个 skill 现在最重要的保护机制之一。它要求 agent 不只回答一层结果，而是追问“这个表从哪里来”“这个命令输出是谁生成的”“更早的源头是什么”。如果追不到，就必须把缺口暴露出来。
+          这不是每个 Loop 都必须按图逐步执行的标准动作，而是贯穿各类 Wave 的处事原则：agent 不应只回答一层结果，而要追问“这个表从哪里来”“这个命令输出是谁生成的”“更早的源头是什么”。如果追不到，就必须把缺口暴露出来。
         </p>
         <div class="diagram">
           <img src="diagrams/gap-handling.svg" alt="遇到 gap 或缺资料时的处理流程图">
-          <p class="diagram-caption">图 3：gap 和缺资料处理路径。合同源文件：<code>diagrams/gap-handling.yaml</code>。</p>
+          <p class="diagram-caption">图 4：深挖证据和暴露缺口的工作原则。合同源文件：<code>diagrams/gap-handling.yaml</code>。</p>
         </div>
         <div class="grid two" style="margin-top: 20px;">
           <div class="callout">
@@ -608,6 +617,7 @@
           <div class="card">
             <h3>坏迹象</h3>
             <ul class="plain-list">
+              <li>研究只停在浅浅一层，就把零散信息拼成一个看似自洽的故事并宣布完成。</li>
               <li>很多结论没有来源，只说“看起来是”。</li>
               <li>主 agent 把所有分析、审查、报告都自己做完。</li>
               <li>执行 agent 完成后很久才开始 review。</li>
