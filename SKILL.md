@@ -23,7 +23,7 @@ A successful loop has seven durable surfaces:
 
 ## Custom Agent Roster
 
-Use custom agents from `C:\Users\gon56956\.codex\agents` when spawning subagents. These TOML files are the authoritative role definitions; this skill only routes work to them and adds loop-level controls. Do not define shadow subagents inside the skill.
+Use custom agents from `$CODEX_HOME/agents` when spawning subagents; when `CODEX_HOME` is unset, use `~/.codex/agents`. Versioned role definitions ship under `custom-agents/`, but installing the skill does not silently write to the user's agent registry. Run `python scripts/install_custom_agents.py` to install missing roles, or `python scripts/install_custom_agents.py --check` for a read-only preflight. These TOML files are the authoritative role definitions; this skill only routes work to them and adds loop-level controls. Do not define shadow subagents inside the skill.
 
 - `handoff-steward`: persistent loop checkpoint and continuity agent. Keep active from loop start through final handoff. Use for accepted-vs-unresolved state, stop states, authorization boundaries, current artifact paths, next-action queues, and startup prompts. It may summarize dependency state for handoff, but do not use it as the dependency dispatcher, reviewer, or primary analyst.
 - `dependency-coordinator`: optional persistent coordination agent for high-coupling waves. Use it to maintain dependency queues, shared contracts, waiting-on state, dependency graphs, cycle warnings, duplicate requests, and small escalation packets for the main agent. Do not use it to accept/reject artifacts, reassign owners, change task scope, adjudicate evidence conflicts, or integrate final content.
@@ -33,7 +33,7 @@ Use custom agents from `C:\Users\gon56956\.codex\agents` when spawning subagents
 - `visual-producer`: wave-scoped execution agent for one-off charts, diagrams, PPT/PPTX, HTML slide decks, PNG posts, image batches, visual reports, and presentation-ready artifacts.
 - `visual-skill-maintainer`: wave-scoped specialist for modifying reusable visual generation skills, renderers, recipes, palettes, fixtures, galleries, tests, and release flows.
 
-If a needed custom agent is unavailable, do not silently emulate it. Record the missing agent as a control gap and block spawning that role unless the user explicitly authorizes a one-off fallback packet.
+If a needed custom agent is unavailable, do not silently emulate it. Record the missing agent as a control gap and block spawning that role unless the user explicitly authorizes a one-off fallback packet. Missing `handoff-steward` blocks strict Loop startup because it is part of the persistent control pair. Missing `dependency-coordinator` disables only optional high-coupling coordination until installed or explicitly replaced. Missing a profile- or wave-required execution/review role blocks the affected packet or Wave, not unrelated work.
 
 ## Task Profiles
 
@@ -77,6 +77,8 @@ Answer these questions explicitly:
 If missing information could cause the wrong files, data, live systems, or behavior to be changed, stop and ask one concise clarification question. If the user has already given hard constraints, encode them in the control files rather than leaving them only in chat.
 
 ## Standard Workflow
+
+Before initialization, run `python scripts/install_custom_agents.py --check`. If the base-required `handoff-steward` is missing or invalid, stop and expose the control gap. Treat other missing roles according to the selected profiles and planned Wave packets. Installation is explicit; never overwrite a user's different same-name TOML unless the user authorizes `--force`.
 
 1. Initialize `agent_work/` with `scripts/init_loop.py <agent_work_dir> [comma_separated_profiles]`.
 2. Start the persistent control pair: main agent plus `handoff-steward`. Keep both active until final handoff. If the wave plan has more than 3 execution agents, cross-agent blocking requests, shared contracts with multiple consumers, or likely circular dependencies, activate an optional persistent `dependency-coordinator`.

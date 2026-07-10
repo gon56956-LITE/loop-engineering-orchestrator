@@ -1,0 +1,238 @@
+version: workflow-contract/v1
+title: 两个持久控制角色怎样协作
+summary: 展示 dependency-coordinator 在 Wave 内疏通依赖，以及 handoff-steward 在 Gate、暂停和恢复时保存连续状态。
+scope:
+  in:
+  - 展示执行 agents、dependency-coordinator、主 agent 和 handoff-steward 的交互
+  - 区分 Wave 内依赖协调与跨阶段连续性管理
+  out:
+  - 不展开执行工作的专业分析、独立 review 或返工细节
+actors:
+- id: workers
+  label: 执行 agents
+  type: system
+- id: coordinator
+  label: Dependency coordinator
+  type: system
+- id: main-agent
+  label: 主 agent
+  type: system
+- id: handoff
+  label: Handoff steward
+  type: system
+artifacts:
+- id: dependency-request
+  label: 依赖请求
+  type: input
+- id: dependency-state
+  label: 依赖队列与关系图
+  type: document
+- id: shared-contract
+  label: 共享合同
+  type: document
+- id: escalation-packet
+  label: 升级包
+  type: decision_record
+- id: gate-decision
+  label: Gate 决定
+  type: decision_record
+- id: handoff-state
+  label: handoff 与恢复状态
+  type: document
+nodes:
+- id: start
+  label: Wave 正在运行
+  type: start
+  actor: workers
+  inputs: []
+  outputs: []
+- id: raise-request
+  label: agent 提出依赖、等待或共享约定需求
+  type: task
+  actor: workers
+  inputs: []
+  outputs:
+  - dependency-request
+- id: register-dependency
+  label: 登记队列、等待关系和影响范围
+  type: task
+  actor: coordinator
+  inputs:
+  - dependency-request
+  outputs:
+  - dependency-state
+- id: operational-resolution
+  label: 是否能在既有范围内协调？
+  type: decision
+  actor: coordinator
+  inputs:
+  - dependency-state
+  outputs: []
+- id: route-resolution
+  label: 路由答复或更新共享合同
+  type: task
+  actor: coordinator
+  inputs:
+  - dependency-state
+  outputs:
+  - shared-contract
+- id: continue-work
+  label: agent 使用答复继续工作
+  type: task
+  actor: workers
+  inputs:
+  - shared-contract
+  outputs: []
+- id: prepare-escalation
+  label: 压缩成范围、owner、冲突或用户决定升级包
+  type: task
+  actor: coordinator
+  inputs:
+  - dependency-state
+  outputs:
+  - escalation-packet
+- id: decide-escalation
+  label: 主 agent 作出控制决定
+  type: task
+  actor: main-agent
+  inputs:
+  - escalation-packet
+  outputs: []
+- id: record-decision
+  label: 更新队列、合同和等待状态
+  type: task
+  actor: coordinator
+  inputs: []
+  outputs:
+  - dependency-state
+- id: gate-event
+  label: Gate、暂停或恢复事件发生
+  type: task
+  actor: main-agent
+  inputs:
+  - dependency-state
+  outputs:
+  - gate-decision
+- id: dependency-summary
+  label: 提供当前阻塞、已解依赖和未决升级摘要
+  type: handoff
+  actor: coordinator
+  inputs:
+  - dependency-state
+  - gate-decision
+  outputs: []
+- id: checkpoint
+  label: 固化已接受、未解决、边界、路径和下一步
+  type: task
+  actor: handoff
+  inputs:
+  - gate-decision
+  outputs:
+  - handoff-state
+- id: resume-needed
+  label: 是否需要跨会话恢复？
+  type: decision
+  actor: handoff
+  inputs:
+  - handoff-state
+  outputs: []
+- id: update-next-wave
+  label: 更新下一 Wave 的启动状态
+  type: end
+  actor: handoff
+  inputs:
+  - handoff-state
+  outputs: []
+- id: write-startup
+  label: 生成恢复说明和启动提示
+  type: end
+  actor: handoff
+  inputs:
+  - handoff-state
+  outputs: []
+edges:
+- id: start-to-raise-request
+  from: start
+  to: raise-request
+  type: sequence
+- id: raise-request-to-register-dependency
+  from: raise-request
+  to: register-dependency
+  type: sequence
+- id: register-dependency-to-operational-resolution
+  from: register-dependency
+  to: operational-resolution
+  type: sequence
+- id: operational-resolution-to-route-resolution
+  from: operational-resolution
+  to: route-resolution
+  type: conditional
+  condition: 可以
+- id: route-resolution-to-continue-work
+  from: route-resolution
+  to: continue-work
+  type: sequence
+- id: continue-work-to-gate-event
+  from: continue-work
+  to: gate-event
+  type: sequence
+- id: operational-resolution-to-prepare-escalation
+  from: operational-resolution
+  to: prepare-escalation
+  type: conditional
+  condition: 需要裁决
+- id: prepare-escalation-to-decide-escalation
+  from: prepare-escalation
+  to: decide-escalation
+  type: sequence
+- id: decide-escalation-to-record-decision
+  from: decide-escalation
+  to: record-decision
+  type: sequence
+- id: record-decision-to-continue-work
+  from: record-decision
+  to: continue-work
+  type: sequence
+- id: gate-event-to-dependency-summary
+  from: gate-event
+  to: dependency-summary
+  type: sequence
+- id: dependency-summary-to-checkpoint
+  from: dependency-summary
+  to: checkpoint
+  type: sequence
+- id: checkpoint-to-resume-needed
+  from: checkpoint
+  to: resume-needed
+  type: sequence
+- id: resume-needed-to-update-next-wave
+  from: resume-needed
+  to: update-next-wave
+  type: conditional
+  condition: 否
+- id: resume-needed-to-write-startup
+  from: resume-needed
+  to: write-startup
+  type: conditional
+  condition: 是
+constraints:
+- id: coordinator-boundary
+  label: Dependency coordinator 不做独立 review、不接受成果、不改变 scope 或 owner，也不裁决证据冲突。
+  applies_to:
+  - register-dependency
+  - route-resolution
+  - prepare-escalation
+- id: handoff-boundary
+  label: Handoff steward 不做实时依赖调度、专业分析或独立 review，只保存已建立的状态。
+  applies_to:
+  - checkpoint
+  - update-next-wave
+  - write-startup
+- id: main-agent-boundary
+  label: 范围、owner、冲突、用户决定和 Gate 裁决仍由主 agent 负责。
+  applies_to:
+  - decide-escalation
+  - gate-event
+assumptions:
+- 图用一次依赖请求到一次 checkpoint 的路径代表两个角色在整个 Loop 中反复运行的工作方式。
+open_questions: []

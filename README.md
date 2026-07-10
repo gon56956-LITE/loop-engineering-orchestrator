@@ -57,7 +57,7 @@ Effort policy:
 
 ## Custom Agents
 
-The skill expects these local custom agents under `C:\Users\gon56956\.codex\agents`. Those TOML files are the authoritative role definitions; the skill should route to them, not maintain looser duplicate subagent definitions:
+The repository ships versioned role definitions under `custom-agents/`. Install them explicitly into `$CODEX_HOME/agents`; when `CODEX_HOME` is unset, the installer uses `~/.codex/agents`. Installing the skill itself does not silently modify the user's custom-agent registry.
 
 - `handoff-steward`
 - `dependency-coordinator` (optional; activate for high-coupling waves)
@@ -67,9 +67,29 @@ The skill expects these local custom agents under `C:\Users\gon56956\.codex\agen
 - `visual-producer`
 - `visual-skill-maintainer`
 
-If a custom agent is missing, record a control gap and block that spawn unless the user explicitly authorizes a one-off fallback packet.
+Install missing roles without overwriting different same-name files:
+
+```powershell
+python scripts/install_custom_agents.py
+```
+
+Run a read-only preflight:
+
+```powershell
+python scripts/install_custom_agents.py --check
+```
+
+Existing different TOML files are reported as conflicts and preserved. Use `--force` only after reviewing the local definition and explicitly deciding to replace it.
+
+If a custom agent is missing, record a control gap and block that spawn unless the user explicitly authorizes a one-off fallback packet. Missing `handoff-steward` blocks strict Loop startup. Missing `dependency-coordinator` only disables optional high-coupling coordination; missing conditional roles blocks the affected profile or Wave packet.
 
 ## Quick Start
+
+Check the custom-agent roster:
+
+```powershell
+python scripts/install_custom_agents.py --check
+```
 
 Initialize a control directory:
 
@@ -121,7 +141,9 @@ Network loss or a manual session `continue` is also not a failure signal. On res
 - `references/state-machine.md`: wave, subwave, review, gate, and terminal states.
 - `references/status-template.json`: status-file shape for persistent and wave-scoped agents.
 - `scripts/init_loop.py`: initializes a loop control directory.
+- `scripts/install_custom_agents.py`: installs or checks bundled custom-agent role definitions without overwriting conflicts by default.
 - `scripts/orchestrator_check.py`: prints dashboard health and gate warnings.
+- `custom-agents/`: versioned custom-agent TOML definitions plus the role requirement manifest.
 - `agents/openai.yaml`: UI metadata for the skill.
 
 ## Validation

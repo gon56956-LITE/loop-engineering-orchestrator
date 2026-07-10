@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 import sys
 import tomllib
 from datetime import datetime, timezone
@@ -177,8 +178,12 @@ def inspect_custom_agents(state):
     approved = set(policy.get("approved_custom_agents", [])) or APPROVED_CUSTOM_AGENTS
     optional = set(policy.get("optional_custom_agents", [])) or OPTIONAL_CUSTOM_AGENTS
     all_known = approved | optional
-    agent_dir = policy.get("authoritative_agent_dir", "~/.codex/agents")
-    root = Path(agent_dir).expanduser()
+    agent_dir = policy.get("authoritative_agent_dir", "$CODEX_HOME/agents")
+    if agent_dir in {"$CODEX_HOME/agents", "%CODEX_HOME%/agents"}:
+        codex_home = os.environ.get("CODEX_HOME")
+        root = Path(codex_home).expanduser() / "agents" if codex_home else Path.home() / ".codex" / "agents"
+    else:
+        root = Path(os.path.expandvars(agent_dir)).expanduser()
     findings = {}
     for name in sorted(all_known):
         path = root / f"{name}.toml"

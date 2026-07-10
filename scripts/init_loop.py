@@ -16,7 +16,7 @@ DEFAULT_STATE = {
     "profiles": [],
     "persistent_agents": ["main-agent", "handoff-steward"],
     "custom_agent_policy": {
-        "authoritative_agent_dir": "~/.codex/agents",
+        "authoritative_agent_dir": "$CODEX_HOME/agents",
         "approved_custom_agents": [
             "handoff-steward",
             "evidence-analyst",
@@ -178,7 +178,7 @@ def initial_content(name):
             "",
             "## Wave-Scoped Custom Agents",
             "",
-            "Authoritative role definitions live in `C:\\Users\\gon56956\\.codex\\agents`. Do not define shadow subagents in the skill.",
+            "Authoritative role definitions live in `$CODEX_HOME/agents` or, when CODEX_HOME is unset, `~/.codex/agents`. Do not define shadow subagents in the skill.",
             "",
             "- evidence-analyst: source-bound evidence execution",
             "- output-synthesizer: accepted-evidence text deliverables, reports, briefs, synthesis narratives, and handoff packages",

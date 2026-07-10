@@ -489,6 +489,26 @@
         <p class="section-intro">
           你可以把它理解成一个小项目组。不同角色不是为了热闹，而是为了避免主 agent 一个人背太多上下文。
         </p>
+        <div class="callout warning" style="margin-bottom: 20px;">
+          <h3>这些角色需要单独安装</h3>
+          <p>
+            下表中的 subagent 不是 skill 内部临时扮演的角色，而是由 <code>$CODEX_HOME/agents</code>
+            （Windows 通常是 <code>%USERPROFILE%\.codex\agents</code>）下的独立 TOML 定义。GitHub
+            仓库在 <code>custom-agents/</code> 中提供了这些角色的版本，但安装 skill 不会自动修改用户的 agent 注册表。
+          </p>
+          <p>
+            安装后应先运行 <code>python scripts/install_custom_agents.py --check</code>；缺少角色时可运行
+            <code>python scripts/install_custom_agents.py</code>，它默认只补缺失文件，不覆盖不同的同名 TOML。
+            如果 Codex 仍找不到所需角色，必须把它记录为 <code>control gap</code>
+            并停止启动该角色，不能悄悄让主 agent 冒充。缺少必需的 <code>handoff-steward</code> 时，严格的
+            Loop 不应正式启动；缺少可选的 <code>dependency-coordinator</code> 时，只能停用高耦合协调能力；
+            缺少某个执行或 review 角色时，依赖它的 Wave 工作包会被阻塞。
+          </p>
+          <p>
+            处理方法有两种：先安装同名 custom-agent TOML；或者由用户明确授权一次性的 fallback
+            工作包，临时使用当前可用的通用 agent。fallback 必须被记录，不能被当成已经安装了正式角色。
+          </p>
+        </div>
         <table class="role-table">
           <thead>
             <tr>
@@ -540,13 +560,48 @@
 
     <section>
       <div class="wrap">
+        <h2>两个持久控制角色怎样工作</h2>
+        <p class="section-intro">
+          大多数 subagent 接收一个工作包、产出一个成果，然后退出；这两个角色不同。它们会在 Loop 中持续存在，
+          但负责不同时间尺度：dependency-coordinator 管 Wave 运行中的依赖流，handoff-steward 管 Gate、暂停、
+          恢复和跨会话的状态连续性。
+        </p>
+        <div class="diagram">
+          <img src="diagrams/control-roles.svg" alt="Dependency coordinator 和 Handoff steward 的协作流程图">
+          <p class="diagram-caption">图 4：两个持久控制角色的协作方式。合同源文件：<code>diagrams/control-roles.yaml</code>。</p>
+        </div>
+        <div class="grid two" style="margin-top: 20px;">
+          <div class="callout">
+            <h3>dependency-coordinator：Wave 内的依赖调度</h3>
+            <p><strong>何时介入：</strong>多个 agent 互相等待、共享同一 schema 或术语、请求重复、合同版本变化，或出现循环依赖时。</p>
+            <p><strong>持续维护：</strong><code>dependency_requests.jsonl</code>、等待关系、<code>dependency_graph.md</code>、共享合同版本和阻塞状态。</p>
+            <p><strong>可以直接处理：</strong>在既有 scope 和 owner 不变的前提下，路由答复、合并重复请求、提醒受影响 agent、维护共享合同索引。</p>
+            <p><strong>必须升级：</strong>需要改变 scope、owner、证据权威、用户授权或 Gate 决定时，只压缩成升级包交给主 agent。</p>
+          </div>
+          <div class="callout">
+            <h3>handoff-steward：跨阶段的连续性管理</h3>
+            <p><strong>何时介入：</strong>Gate 完成、任务暂停、上下文过长、会话中断、准备恢复或需要交给新会话时。</p>
+            <p><strong>持续保存：</strong>已接受与未解决内容、当前权威文件、active gaps、source requests、授权边界、阻塞点和下一步 owner。</p>
+            <p><strong>主要产出：</strong><code>handoff.md</code>、恢复记录、下一步队列，以及必要时可直接用于新会话的启动提示。</p>
+            <p><strong>不承担：</strong>它不实时派发依赖、不重新做 evidence analysis，也不代替 reviewer 判断成果质量。</p>
+          </div>
+        </div>
+        <div class="callout danger" style="margin-top: 16px;">
+          <strong>最重要的边界：</strong>dependency-coordinator 让运行中的关系不堵塞，handoff-steward 让已经建立的状态不丢失；
+          两者都不接受成果、不裁决证据冲突，也不替主 agent 做 Gate 决定。
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
         <h2>深挖证据和暴露缺口的工作原则</h2>
         <p class="section-intro">
           这不是每个 Loop 都必须按图逐步执行的标准动作，而是贯穿各类 Wave 的处事原则：agent 不应只回答一层结果，而要追问“这个表从哪里来”“这个命令输出是谁生成的”“更早的源头是什么”。如果追不到，就必须把缺口暴露出来。
         </p>
         <div class="diagram">
           <img src="diagrams/gap-handling.svg" alt="遇到 gap 或缺资料时的处理流程图">
-          <p class="diagram-caption">图 4：深挖证据和暴露缺口的工作原则。合同源文件：<code>diagrams/gap-handling.yaml</code>。</p>
+          <p class="diagram-caption">图 5：深挖证据和暴露缺口的工作原则。合同源文件：<code>diagrams/gap-handling.yaml</code>。</p>
         </div>
         <div class="grid two" style="margin-top: 20px;">
           <div class="callout">

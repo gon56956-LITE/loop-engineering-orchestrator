@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "roles": [
+    {
+      "name": "handoff-steward",
+      "requirement": "base_required",
+      "lifecycle": "persistent"
+    },
+    {
+      "name": "dependency-coordinator",
+      "requirement": "optional",
+      "lifecycle": "persistent"
+    },
+    {
+      "name": "evidence-analyst",
+      "requirement": "profile_conditional",
+      "lifecycle": "wave_scoped"
+    },
+    {
+      "name": "reviewer",
+      "requirement": "wave_conditional",
+      "lifecycle": "wave_scoped"
+    },
+    {
+      "name": "output-synthesizer",
+      "requirement": "profile_conditional",
+      "lifecycle": "wave_scoped"
+    },
+    {
+      "name": "visual-producer",
+      "requirement": "profile_conditional",
+      "lifecycle": "wave_scoped"
+    },
+    {
+      "name": "visual-skill-maintainer",
+      "requirement": "profile_conditional",
+      "lifecycle": "wave_scoped"
+    }
+  ]
+}
