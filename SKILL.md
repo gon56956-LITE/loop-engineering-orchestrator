@@ -1,6 +1,6 @@
 ---
 name: loop-engineering-orchestrator
-description: Run reusable loop-engineering workflows for long, multi-agent work across research, coding, data analysis, document synthesis, visual reports, and specialist investigations. Use when Codex needs durable orchestration with persistent main-agent plus handoff-steward control, Wave0/Gate0 discovery, WaveN/GateN loops, custom subagent routing, heartbeat status, request/rework queues, claim trace matrices, owner-preserving review/rework gates, quality checks, hooks, dashboards, handoffs, and final integration discipline.
+description: Run reusable loop-engineering workflows for long, multi-agent work across research, coding, data analysis, document synthesis, visual reports, and specialist investigations. Use when Codex needs durable orchestration with persistent main-agent plus handoff continuity, Wave0/Gate0 discovery, WaveN/GateN loops, capability-based subagent routing, heartbeat status, request/rework queues, claim trace matrices, owner-preserving review/rework gates, quality checks, hooks, dashboards, handoffs, and final integration discipline.
 ---
 
 # Loop Engineering Orchestrator
@@ -9,7 +9,7 @@ Use this skill when the work is too long, risky, cross-functional, or evidence-h
 
 ## Core Idea
 
-The main agent is the final orchestrator and gate decision owner. `handoff-steward` is the persistent continuity partner. Large or tightly coupled waves may also use a persistent `dependency-coordinator` to keep cross-agent requests moving without loading every operational detail into the main agent. Other subagents are wave-scoped workers, analysts, reviewers, visual producers, maintainers, testers, or rework owners. Hooks and scripts only observe state and run checks; they never replace main-agent judgment.
+The main agent is the final orchestrator and gate decision owner. A provider bound to the logical `handoff-steward` role is the persistent continuity partner. Large or tightly coupled waves may also bind a persistent provider to `dependency-coordinator` so cross-agent requests keep moving without loading every operational detail into the main agent. Other subagents are wave-scoped workers, analysts, reviewers, visual producers, maintainers, testers, or rework owners. Hooks and scripts only observe state and run checks; they never replace main-agent judgment.
 
 A successful loop has seven durable surfaces:
 
@@ -21,19 +21,21 @@ A successful loop has seven durable surfaces:
 6. Review/rework/gap gates that stop weak work before final integration and expose missing source needs.
 7. Handoff and integration files that let a new session resume without guesswork.
 
-## Custom Agent Roster
+## Role Resolution And Optional Custom Agents
 
-Use custom agents from `$CODEX_HOME/agents` when spawning subagents; when `CODEX_HOME` is unset, use `~/.codex/agents`. Versioned role definitions ship under `custom-agents/`, but installing the skill does not silently write to the user's agent registry. Run `python scripts/install_custom_agents.py` to install missing roles, or `python scripts/install_custom_agents.py --check` for a read-only preflight. These TOML files are the authoritative role definitions; this skill only routes work to them and adds loop-level controls. Do not define shadow subagents inside the skill.
+Treat orchestration roles as capability contracts, not fixed agent names. Read `references/role-resolution.md` before planning a Wave, bind every logical role to either a suitable custom agent or a standard Codex `explorer`, `worker`, or `default` agent, and record the provider in `agent_roster.md` and status files.
+
+The versioned TOMLs under `custom-agents/` are an optional reference role pack, strongest for the user's current evidence/content-research workflow. Install them into `$CODEX_HOME/agents` with `python scripts/install_custom_agents.py` only when they fit the intended scenario. They are not universal prerequisites and must not force coding, large-scale data analysis, or large-scale output work through research-specific prompts.
 
 - `handoff-steward`: persistent loop checkpoint and continuity agent. Keep active from loop start through final handoff. Use for accepted-vs-unresolved state, stop states, authorization boundaries, current artifact paths, next-action queues, and startup prompts. It may summarize dependency state for handoff, but do not use it as the dependency dispatcher, reviewer, or primary analyst.
-- `dependency-coordinator`: optional persistent coordination agent for high-coupling waves. Use it to maintain dependency queues, shared contracts, waiting-on state, dependency graphs, cycle warnings, duplicate requests, and small escalation packets for the main agent. Do not use it to accept/reject artifacts, reassign owners, change task scope, adjudicate evidence conflicts, or integrate final content.
+- `dependency-coordinator`: optional persistent coordination agent for high-coupling waves. Use it when one execution agent in the same Wave originates a request addressed to another execution agent for an artifact, answer, schema, source map, interface, or other owned output. Agent A may initiate the request without main-agent approval, but material requests and responses must use `dependency_requests.jsonl` and `dependency_responses.jsonl` as the source of truth. The coordinator registers requester and target, routes the request, tracks the response, returns it to the requester, and maintains dependency queues, shared contracts, waiting-on state, dependency graphs, cycle warnings, duplicate requests, and small escalation packets for the main agent. Do not use it to accept/reject artifacts, reassign owners, change task scope, adjudicate evidence conflicts, or integrate final content.
 - `evidence-analyst`: wave-scoped execution agent for source-bound technical evidence work across PDFs, WI/docs, HTML/Markdown, CSV/XLSX, .cal files, logs, configs, recipes, test outputs, and source-code tracing.
 - `reviewer`: wave-scoped independent review/test/QA agent. Use to decide whether outputs satisfy requirements, evidence quality, code/test expectations, visual QA, skill compliance, or gate readiness.
 - `output-synthesizer`: wave-scoped execution agent for final or interim text deliverables such as Markdown/HTML reports, technical briefs, executive summaries, synthesis narratives, and handoff packages. Use it after accepted evidence and `integration_plan.md` exist. It may organize and write; it must not create new facts, strengthen weak claims, adjudicate conflicts, or use unaccepted artifacts as if they were accepted.
 - `visual-producer`: wave-scoped execution agent for one-off charts, diagrams, PPT/PPTX, HTML slide decks, PNG posts, image batches, visual reports, and presentation-ready artifacts.
 - `visual-skill-maintainer`: wave-scoped specialist for modifying reusable visual generation skills, renderers, recipes, palettes, fixtures, galleries, tests, and release flows.
 
-If a needed custom agent is unavailable, do not silently emulate it. Record the missing agent as a control gap and block spawning that role unless the user explicitly authorizes a one-off fallback packet. Missing `handoff-steward` blocks strict Loop startup because it is part of the persistent control pair. Missing `dependency-coordinator` disables only optional high-coupling coordination until installed or explicitly replaced. Missing a profile- or wave-required execution/review role blocks the affected packet or Wave, not unrelated work.
+If an exact custom agent is unavailable, resolve the logical role to a standard provider with an explicit packet; this is a normal route, not a fallback. Missing custom TOMLs do not block a Loop. Record a control gap only when neither installed custom agents nor standard `explorer`, `worker`, or `default` agents can satisfy a required capability. Keep execution and independent review on separate instances regardless of provider.
 
 ## Task Profiles
 
@@ -78,10 +80,10 @@ If missing information could cause the wrong files, data, live systems, or behav
 
 ## Standard Workflow
 
-Before initialization, run `python scripts/install_custom_agents.py --check`. If the base-required `handoff-steward` is missing or invalid, stop and expose the control gap. Treat other missing roles according to the selected profiles and planned Wave packets. Installation is explicit; never overwrite a user's different same-name TOML unless the user authorizes `--force`.
+Before initialization, inventory installed custom agents and available standard agent types. Resolve the provisional logical-role bindings with `references/role-resolution.md`. The optional command `python scripts/install_custom_agents.py --check` reports the bundled reference roles but missing TOMLs do not block startup.
 
 1. Initialize `agent_work/` with `scripts/init_loop.py <agent_work_dir> [comma_separated_profiles]`.
-2. Start the persistent control pair: main agent plus `handoff-steward`. Keep both active until final handoff. If the wave plan has more than 3 execution agents, cross-agent blocking requests, shared contracts with multiple consumers, or likely circular dependencies, activate an optional persistent `dependency-coordinator`.
+2. Start the persistent control pair: main agent plus the provider bound to the `handoff-steward` capability. Use the custom role when installed and suitable; otherwise use a persistent `default` agent with the handoff packet. Keep both active until final handoff. If the wave plan has more than 3 execution agents, cross-agent blocking requests, shared contracts with multiple consumers, or likely circular dependencies, bind the optional `dependency-coordinator` capability to a suitable custom role or persistent `default` agent.
 3. Write `agent_roster.md`, `orchestration_plan.md`, `source_manifest.md`, `wave_register.md`, and `risk_register.md`.
 4. Plan and run Wave0 for boundary discovery, source inventory, task partitioning, risk discovery, and formal packet recommendations.
 5. Gate0: main agent adjudicates Wave0 with `handoff-steward`, combines the user prompt, hard constraints, Wave0 output, and discovered evidence, then revises task details before formal work starts.
@@ -171,7 +173,7 @@ Within a WaveN, do not wait for all execution agents to finish before starting r
 - if early review reveals a systemic flaw, the main agent may pause similar unaccepted packets, revise the packet template, and record the correction before work continues
 - GateN still runs only after all packets are accepted, rejected, declared as gaps, or explicitly carried forward/blocking
 
-For substantial final text output, use an Output Synthesis Wave rather than main-agent solo writing. The Wave must still be a complete loop: execution by `output-synthesizer`, review by `reviewer`, rework by the original `output-synthesizer` owner or backup writer, and one GateN decision. Inputs are limited to accepted artifacts, declared gaps, `claim_trace_matrix.md`, `dependency_graph.md` when relevant, and `integration_plan.md`. The output agent may improve structure, wording, and narrative flow, but it must preserve claim strength, provenance, limitations, and gap labels. Visual artifacts remain owned by `visual-producer`; reusable visual-tool changes remain owned by `visual-skill-maintainer`.
+For substantial final text output, use an Output Synthesis Wave rather than main-agent solo writing. The Wave must still be a complete loop: execution by a provider bound to the logical `output-synthesizer` role, review by a separate provider bound to `reviewer`, rework by the original output owner or an explicitly recorded backup writer, and one GateN decision. Standard `worker` or `default` providers are valid when no suitable custom role is used. Inputs are limited to accepted artifacts, declared gaps, `claim_trace_matrix.md`, `dependency_graph.md` when relevant, and `integration_plan.md`. The output agent may improve structure, wording, and narrative flow, but it must preserve claim strength, provenance, limitations, and gap labels. Bind visual artifact production and reusable visual-tool maintenance to suitable providers under the logical `visual-producer` and `visual-skill-maintainer` roles.
 
 For broad research with many topics, split work by topic or source family and assign parallel evidence packets plus parallel reviewer packets. Do not rely on one human review pass to discover shallow analysis across many topics. Review packets should check depth, source coverage, and internal-logic trace for the same topic boundary as the evidence packet.
 
@@ -189,7 +191,7 @@ For each evidence packet over multi-layer files, include a depth contract:
 
 Each work packet should include:
 
-- `packet_id`, `wave_id`, optional `subwave_id`, role, custom agent type, owner, reviewer, rework owner, status path, and owned artifact path.
+- `packet_id`, `wave_id`, optional `subwave_id`, logical role, `provider_kind`, `agent_type`, `custom_agent` when used, `binding_rationale`, owner, reviewer, rework owner, status path, and owned artifact path.
 - Mission question, in-scope sources, out-of-scope sources, and hard constraints.
 - Expected output shape, claim-trace obligations, acceptance gates, and rework route.
 - Packet-level review readiness states, rolling review queue route, expected reviewer boundary, and immediate rework owner.
@@ -202,12 +204,22 @@ Each work packet should include:
 
 Do not spawn two agents with overlapping write ownership. If two agents need the same source set, separate their questions or make one a reviewer.
 
+## Wave Interaction Protocol
+
+Read `references/wave-interaction-protocol.md` before planning or operating a multi-agent Wave. Classify each material Wave event through its routing matrix instead of improvising a side channel.
+
+- Use one file-backed source of truth for every material request, response, review finding, rework instruction, source gap, conflict, and control decision.
+- Allow agents to originate in-scope requests without main-agent pre-approval, but do not treat direct messages as authoritative records.
+- Keep operational dependency routing with `dependency-coordinator`, quality decisions with reviewers, rework with the original owner, scope/ownership/authorization/Gate decisions with the main agent, and continuity checkpoints with `handoff-steward`.
+- Close an event only when the protocol's closure condition is met, not merely when a message or response was sent.
+
 ## Dependency Coordination Rules
 
 Prefer dependency design before dependency firefighting. If one packet cannot safely start until another packet produces an artifact, contract, source map, schema, or decision, split the work into subwaves or declare an explicit `depends_on` relationship instead of launching both as independent parallel work.
 
 Use a persistent `dependency-coordinator` when any of these are true:
 
+- one execution agent in a Wave records a request addressed to another execution agent
 - one WaveN has more than 3 execution agents
 - two or more agents are blocked on each other's outputs
 - shared contracts are being consumed by multiple agents
@@ -216,6 +228,8 @@ Use a persistent `dependency-coordinator` when any of these are true:
 
 The `dependency-coordinator` owns operational coordination only. It may:
 
+- manage Agent A -> Agent B request/response flow without loading ordinary routing details into the main agent context
+- treat the file-backed dependency request and response queues as authoritative; use direct notifications only as optional alerts
 - maintain `dependency_graph.md`, `dependency_requests.jsonl`, `dependency_responses.jsonl`, and shared-contract indexes
 - track `waiting_on`, `blocking_requests`, `provided_outputs`, and `consumed_contracts` in status files
 - ping target agents for dependency responses within heartbeat and silent-window rules
@@ -274,7 +288,8 @@ An analyst's statement that "no gap remains" is not sufficient for acceptance. T
 
 Each status file must include:
 
-- `agent_id`, `role`, `custom_agent`, `lifecycle`, `wave_id`, `profile`, `reasoning_effort`, `effort_rationale`, `model_policy`, `state`, `current_artifact`, `last_progress_at`, `next_step`, `blockers`.
+- `agent_id`, `role`, `role_binding`, `provider_kind`, `agent_type`, `binding_rationale`, `custom_agent`, `lifecycle`, `wave_id`, `profile`, `reasoning_effort`, `effort_rationale`, `model_policy`, `state`, `current_artifact`, `last_progress_at`, `next_step`, `blockers`.
+- Use `provider_kind: custom` with the installed custom name in both `agent_type` and `custom_agent`; use `provider_kind: standard` with `agent_type: explorer|worker|default` and an empty `custom_agent`.
 - Use optional `subwave_id` for subwave agents and `release_status` for wave-scoped agents at closeout. Valid closeout release statuses are `released`, `closed`, and `carried_forward`.
 - Optional `heartbeat_interval_minutes`, `last_heartbeat_at`, `silent_window_until`, `silent_window_reason`, `last_ping_at`, `ping_count`, and `do_not_interrupt_before` for long processing.
 - Optional `depends_on`, `waiting_on`, `blocking_requests`, `provided_outputs`, `consumed_contracts`, and `coordination_notes` for cross-agent dependency tracking.
@@ -327,7 +342,7 @@ Do not kill work by elapsed time alone. Use status timestamps, owned artifact mt
 
 ## Request Queue Rules
 
-Use `dependency_requests.jsonl` for normal cross-agent dependencies inside a wave. Use `specialist_requests.jsonl` only when the request needs a specialist role or domain expert beyond the existing packet owners. Use `source_requests.jsonl` when a gap cannot be closed without missing files, data, logs, user decisions, connectors, live-system access, or an authoritative tie-breaker. These queues avoid untracked side chats and give the main agent or `dependency-coordinator` a prioritizable surface.
+Use `dependency_requests.jsonl` for normal cross-agent dependencies inside a wave, including a request originated by one execution agent and addressed to another execution agent. Agent A may create this request without main-agent approval, but it must include `requester` and `target_agent`; an untracked direct message is not the authoritative request. The `dependency-coordinator` should route the recorded request to `target_agent`, track the matching response in `dependency_responses.jsonl`, and return the response and artifact pointers to the requester without involving the main agent unless the escalation condition is met. Direct messaging, when the runtime supports it, is an optional notification only and must be mirrored in the queues. Use `specialist_requests.jsonl` only when the request needs a specialist role or domain expert beyond the existing packet owners. Use `source_requests.jsonl` when a gap cannot be closed without missing files, data, logs, user decisions, connectors, live-system access, or an authoritative tie-breaker. These queues avoid untracked side chats and give the main agent or `dependency-coordinator` a prioritizable surface.
 
 Each dependency request should include:
 

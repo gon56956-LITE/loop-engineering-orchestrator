@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
+import os
 import sys
+import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -17,7 +19,11 @@ DEFAULT_STATE = {
     "persistent_agents": ["main-agent", "handoff-steward"],
     "custom_agent_policy": {
         "authoritative_agent_dir": "$CODEX_HOME/agents",
-        "approved_custom_agents": [
+        "role_binding_strategy": "capability_first",
+        "custom_agents_required": False,
+        "standard_agent_types": ["explorer", "worker", "default"],
+        "standard_provider_is_fallback": False,
+        "bundled_reference_agents": [
             "handoff-steward",
             "evidence-analyst",
             "output-synthesizer",
@@ -25,11 +31,10 @@ DEFAULT_STATE = {
             "visual-producer",
             "visual-skill-maintainer",
         ],
-        "optional_custom_agents": [
+        "conditionally_activated_reference_agents": [
             "dependency-coordinator",
         ],
         "shadow_skill_subagents_allowed": False,
-        "fallback_requires_user_authorization": True,
     },
     "coordination_policy": {
         "dependency_coordinator_optional": True,
@@ -167,26 +172,25 @@ def initial_content(name):
             "",
             f"Initialized: {initialized}",
             "",
-            "## Persistent Agents",
+            "## Persistent Logical Roles",
             "",
             "- main-agent: orchestrator and final gate decision owner",
-            "- handoff-steward: continuity, stop-state, accepted-vs-unresolved, and next-action owner",
+            "- handoff-steward capability: continuity, stop-state, accepted-vs-unresolved, and next-action owner; bind to the custom role or a persistent standard default agent",
             "",
             "## Optional Persistent Coordination",
             "",
-            "- dependency-coordinator: dependency queue, shared-contract, waiting-on, and escalation-packet owner for high-coupling waves; it does not accept artifacts, adjudicate evidence, reassign owners, or integrate final content",
+            "- dependency-coordinator capability: bind to the custom role or a persistent standard default agent for dependency queues, shared contracts, waiting-on state, and escalation packets",
             "",
-            "## Wave-Scoped Custom Agents",
+            "## Wave-Scoped Provider Resolution",
             "",
-            "Authoritative role definitions live in `$CODEX_HOME/agents` or, when CODEX_HOME is unset, `~/.codex/agents`. Do not define shadow subagents in the skill.",
+            "Bind each logical role to a suitable installed custom agent or standard `explorer`, `worker`, or `default` agent. Record provider_kind, agent_type, role_binding, and binding_rationale.",
             "",
-            "- evidence-analyst: source-bound evidence execution",
-            "- output-synthesizer: accepted-evidence text deliverables, reports, briefs, synthesis narratives, and handoff packages",
-            "- reviewer: independent review, test, and QA",
-            "- visual-producer: one-off visual deliverables",
-            "- visual-skill-maintainer: reusable visual skill/tool maintenance",
+            "- explorer: read-only codebase or repository discovery",
+            "- worker: implementation, data-processing, output artifacts, visuals, and original-owner rework",
+            "- default: general research, coordination, synthesis, independent review, handoff, and dependency coordination",
+            "- optional custom references: evidence-analyst, reviewer, output-synthesizer, visual-producer, visual-skill-maintainer",
             "",
-            "If a custom agent is missing, record a control gap and block the spawn unless the user explicitly authorizes a one-off fallback packet.",
+            "A missing custom TOML is not a control gap when a standard provider satisfies the capability.",
             "",
             "## Reserved Rework Capacity",
             "",
@@ -364,12 +368,45 @@ def initial_content(name):
     }
     return "\n".join(templates.get(name, [f"# {title}", "", f"Initialized: {initialized}", ""])) + "\n"
 
-def status_content(agent_id, role, custom_agent):
+def resolve_custom_agent_dir():
+    codex_home = os.environ.get("CODEX_HOME")
+    return Path(codex_home).expanduser() / "agents" if codex_home else Path.home() / ".codex" / "agents"
+
+def custom_agent_available(name):
+    path = resolve_custom_agent_dir() / f"{name}.toml"
+    if not path.exists():
+        return False
+    try:
+        parsed = tomllib.loads(path.read_text(encoding="utf-8"))
+        return parsed.get("name") == name
+    except Exception:
+        return False
+
+def status_content(agent_id, role, role_binding):
     now = now_iso()
+    if agent_id == "main-agent":
+        provider_kind = "main"
+        agent_type = "main-agent"
+        custom_agent = ""
+        binding_rationale = "The parent agent owns orchestration and Gate decisions."
+    elif custom_agent_available(role_binding):
+        provider_kind = "custom"
+        agent_type = role_binding
+        custom_agent = role_binding
+        binding_rationale = f"Installed custom agent matches the {role_binding} capability."
+    else:
+        provider_kind = "standard"
+        agent_type = "default"
+        custom_agent = ""
+        binding_rationale = f"Standard default agent is bound to the {role_binding} capability."
     return {
         "agent_id": agent_id,
         "role": role,
         "custom_agent": custom_agent,
+        "provider_kind": provider_kind,
+        "agent_type": agent_type,
+        "role_binding": role_binding,
+        "binding_rationale": binding_rationale,
         "lifecycle": "persistent",
         "wave_id": "all",
         "profile": "orchestration",
@@ -410,10 +447,10 @@ def ensure_persistent_statuses(root):
         ("main-agent", "Orchestrator", "main-agent"),
         ("handoff-steward", "Handoff Steward", "handoff-steward"),
     ]
-    for agent_id, role, custom_agent in defaults:
+    for agent_id, role, role_binding in defaults:
         path = status_dir / f"{agent_id}.json"
         if not path.exists():
-            path.write_text(json.dumps(status_content(agent_id, role, custom_agent), indent=2), encoding="utf-8")
+            path.write_text(json.dumps(status_content(agent_id, role, role_binding), indent=2), encoding="utf-8")
 
 def main():
     if len(sys.argv) not in (2, 3):

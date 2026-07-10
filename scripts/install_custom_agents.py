@@ -62,13 +62,13 @@ def print_check(results):
 
 
 def check_exit_code(results):
-    blocking = [
-        role["name"]
+    invalid = [
+        f"{role['name']}:{result}"
         for role, _, result in results
-        if role["requirement"] == "base_required" and result != "ok"
+        if result not in {"ok", "missing"}
     ]
-    if blocking:
-        print(f"blocking base roles: {', '.join(blocking)}", file=sys.stderr)
+    if invalid:
+        print(f"invalid installed custom roles: {', '.join(invalid)}", file=sys.stderr)
         return 1
     return 0
 

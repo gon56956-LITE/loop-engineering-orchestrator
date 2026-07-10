@@ -1,6 +1,10 @@
 {
   "agent_id": "example_agent",
   "role": "Evidence Analyst",
+  "role_binding": "evidence-analyst",
+  "provider_kind": "custom",
+  "agent_type": "evidence-analyst",
+  "binding_rationale": "Installed evidence-research custom agent matches the packet.",
   "custom_agent": "evidence-analyst",
   "lifecycle": "wave_scoped",
   "wave_id": "Wave1",

@@ -1,15 +1,19 @@
 version: workflow-contract/v1
 title: 两个持久控制角色怎样协作
-summary: 展示 dependency-coordinator 在 Wave 内疏通依赖，以及 handoff-steward 在 Gate、暂停和恢复时保存连续状态。
+summary: 展示执行 agent 通过统一文件队列发起和响应 request，以及 dependency-coordinator 与 handoff-steward 如何分别维护依赖流和连续状态。
 scope:
   in:
-  - 展示执行 agents、dependency-coordinator、主 agent 和 handoff-steward 的交互
+  - 展示执行 agent A 通过统一文件队列向执行 agent B 发起 request 时的完整路由
+  - 展示 dependency-coordinator、主 agent 和 handoff-steward 的交互
   - 区分 Wave 内依赖协调与跨阶段连续性管理
   out:
   - 不展开执行工作的专业分析、独立 review 或返工细节
 actors:
-- id: workers
-  label: 执行 agents
+- id: requester-agent
+  label: 执行 agent A
+  type: system
+- id: target-agent
+  label: 执行 agent B
   type: system
 - id: coordinator
   label: Dependency coordinator
@@ -22,7 +26,7 @@ actors:
   type: system
 artifacts:
 - id: dependency-request
-  label: 依赖请求
+  label: dependency_requests.jsonl 条目
   type: input
 - id: dependency-state
   label: 依赖队列与关系图
@@ -30,6 +34,9 @@ artifacts:
 - id: shared-contract
   label: 共享合同
   type: document
+- id: dependency-response
+  label: dependency_responses.jsonl 条目
+  type: output
 - id: escalation-packet
   label: 升级包
   type: decision_record
@@ -43,13 +50,13 @@ nodes:
 - id: start
   label: Wave 正在运行
   type: start
-  actor: workers
+  actor: requester-agent
   inputs: []
   outputs: []
 - id: raise-request
-  label: agent 提出依赖、等待或共享约定需求
+  label: agent A 无需主 agent 预批准，写入面向 agent B 的 request
   type: task
-  actor: workers
+  actor: requester-agent
   inputs: []
   outputs:
   - dependency-request
@@ -69,18 +76,34 @@ nodes:
   - dependency-state
   outputs: []
 - id: route-resolution
-  label: 路由答复或更新共享合同
+  label: 登记、去重并把 request 路由给 agent B
   type: task
   actor: coordinator
   inputs:
   - dependency-state
+  outputs: []
+- id: target-response
+  label: agent B 写入 response 和 artifact pointer
+  type: task
+  actor: target-agent
+  inputs:
+  - dependency-request
+  outputs:
+  - dependency-response
+- id: deliver-response
+  label: 跟踪 response 并返回给 agent A
+  type: task
+  actor: coordinator
+  inputs:
+  - dependency-response
   outputs:
   - shared-contract
 - id: continue-work
   label: agent 使用答复继续工作
   type: task
-  actor: workers
+  actor: requester-agent
   inputs:
+  - dependency-response
   - shared-contract
   outputs: []
 - id: prepare-escalation
@@ -105,6 +128,7 @@ nodes:
   inputs: []
   outputs:
   - dependency-state
+  - dependency-response
 - id: gate-event
   label: Gate、暂停或恢复事件发生
   type: task
@@ -170,6 +194,14 @@ edges:
   condition: 可以
 - id: route-resolution-to-continue-work
   from: route-resolution
+  to: target-response
+  type: sequence
+- id: target-response-to-deliver-response
+  from: target-response
+  to: deliver-response
+  type: sequence
+- id: deliver-response-to-continue-work
+  from: deliver-response
   to: continue-work
   type: sequence
 - id: continue-work-to-gate-event
@@ -191,7 +223,7 @@ edges:
   type: sequence
 - id: record-decision-to-continue-work
   from: record-decision
-  to: continue-work
+  to: deliver-response
   type: sequence
 - id: gate-event-to-dependency-summary
   from: gate-event
@@ -221,6 +253,14 @@ constraints:
   applies_to:
   - register-dependency
   - route-resolution
+  - deliver-response
+- id: file-backed-request-rule
+  label: Agent A 可自主发起 request；统一 JSONL 队列是权威记录，直接消息只能作为提醒。
+  applies_to:
+  - raise-request
+  - route-resolution
+  - target-response
+  - deliver-response
   - prepare-escalation
 - id: handoff-boundary
   label: Handoff steward 不做实时依赖调度、专业分析或独立 review，只保存已建立的状态。

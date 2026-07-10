@@ -266,6 +266,14 @@
       border-bottom: 0;
     }
 
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    .routing-table {
+      min-width: 860px;
+    }
+
     .callout {
       border-left: 4px solid var(--blue);
       background: #eff6ff;
@@ -490,29 +498,73 @@
           你可以把它理解成一个小项目组。不同角色不是为了热闹，而是为了避免主 agent 一个人背太多上下文。
         </p>
         <div class="callout warning" style="margin-bottom: 20px;">
-          <h3>这些角色需要单独安装</h3>
+          <h3>custom agents 是可选参考，不是强制依赖</h3>
           <p>
-            下表中的 subagent 不是 skill 内部临时扮演的角色，而是由 <code>$CODEX_HOME/agents</code>
-            （Windows 通常是 <code>%USERPROFILE%\.codex\agents</code>）下的独立 TOML 定义。GitHub
-            仓库在 <code>custom-agents/</code> 中提供了这些角色的版本，但安装 skill 不会自动修改用户的 agent 注册表。
+            这个 skill 强制的是执行、独立 review、依赖协调、handoff 等职责能力，而不是某几个固定 TOML 名称。
+            每个逻辑职责都可以绑定到场景匹配的 custom agent，也可以绑定到 Codex 标准
+            <code>explorer</code>、<code>worker</code> 或 <code>default</code>。
           </p>
           <p>
-            安装后应先运行 <code>python scripts/install_custom_agents.py --check</code>；缺少角色时可运行
-            <code>python scripts/install_custom_agents.py</code>，它默认只补缺失文件，不覆盖不同的同名 TOML。
-            如果 Codex 仍找不到所需角色，必须把它记录为 <code>control gap</code>
-            并停止启动该角色，不能悄悄让主 agent 冒充。缺少必需的 <code>handoff-steward</code> 时，严格的
-            Loop 不应正式启动；缺少可选的 <code>dependency-coordinator</code> 时，只能停用高耦合协调能力；
-            缺少某个执行或 review 角色时，依赖它的 Wave 工作包会被阻塞。
+            仓库的 <code>custom-agents/</code> 是当前内容和证据研究场景的参考角色包，可以选择安装，
+            但不应把 evidence-analyst 的研究提示强加给编程、大规模数据分析或所有内容输出任务。
+            缺少这些 TOML 时，使用标准 subagent 是正常 provider 路径，不是降级或临时 fallback。
           </p>
           <p>
-            处理方法有两种：先安装同名 custom-agent TOML；或者由用户明确授权一次性的 fallback
-            工作包，临时使用当前可用的通用 agent。fallback 必须被记录，不能被当成已经安装了正式角色。
+            只有 custom 和标准 subagent 都无法满足必要能力时才形成 <code>control gap</code>。
+            具体绑定必须写入 <code>agent_roster.md</code>，明确 logical role、provider kind、实际 agent type 和选择理由。
           </p>
         </div>
+        <h3>同一职责可以由不同 provider 承担</h3>
+        <div class="table-scroll">
+        <table class="role-table routing-table">
+          <thead>
+            <tr>
+              <th>逻辑职责</th>
+              <th>可选 custom 参考</th>
+              <th>标准 subagent 路径</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>代码库或资料摸底</td>
+              <td>evidence-analyst</td>
+              <td><code>explorer</code> 处理代码库问题；<code>default</code> 处理文档、数据和混合研究</td>
+            </tr>
+            <tr>
+              <td>编程、数据处理或文件型交付物</td>
+              <td>场景专用执行 agent</td>
+              <td><code>worker</code>，并给出不重叠的写入范围</td>
+            </tr>
+            <tr>
+              <td>独立 review、测试或 QA</td>
+              <td>reviewer</td>
+              <td>独立的 <code>default</code>；代码库只读检查可用 <code>explorer</code></td>
+            </tr>
+            <tr>
+              <td>dependency-coordinator</td>
+              <td>dependency-coordinator</td>
+              <td>持久 <code>default</code>，获得依赖队列和路由工作包</td>
+            </tr>
+            <tr>
+              <td>handoff-steward</td>
+              <td>handoff-steward</td>
+              <td>持久 <code>default</code>，获得 checkpoint 和恢复工作包</td>
+            </tr>
+            <tr>
+              <td>大规模内容或视觉输出</td>
+              <td>output-synthesizer / visual-producer</td>
+              <td><code>worker</code> 负责文件型产出，另用独立 <code>default</code> review</td>
+            </tr>
+          </tbody>
+        </table>
+        </div>
+        <p class="section-intro" style="margin-top: 20px;">
+          下表描述的是稳定的逻辑职责和边界；角色名可以由 custom 或标准 provider 实现。
+        </p>
         <table class="role-table">
           <thead>
             <tr>
-              <th>角色</th>
+              <th>逻辑职责（参考角色名）</th>
               <th>普通用户可以怎么理解</th>
               <th>不能做什么</th>
             </tr>
@@ -564,7 +616,8 @@
         <p class="section-intro">
           大多数 subagent 接收一个工作包、产出一个成果，然后退出；这两个角色不同。它们会在 Loop 中持续存在，
           但负责不同时间尺度：dependency-coordinator 管 Wave 运行中的依赖流，handoff-steward 管 Gate、暂停、
-          恢复和跨会话的状态连续性。
+          恢复和跨会话的状态连续性。这里描述的是逻辑职责；它们既可以由同名 custom agent 承担，也可以由持久
+          <code>default</code> agent 按专用工作包承担。
         </p>
         <div class="diagram">
           <img src="diagrams/control-roles.svg" alt="Dependency coordinator 和 Handoff steward 的协作流程图">
@@ -573,7 +626,10 @@
         <div class="grid two" style="margin-top: 20px;">
           <div class="callout">
             <h3>dependency-coordinator：Wave 内的依赖调度</h3>
-            <p><strong>何时介入：</strong>多个 agent 互相等待、共享同一 schema 或术语、请求重复、合同版本变化，或出现循环依赖时。</p>
+            <p><strong>最直接的场景：</strong>同一个 Wave 里的执行 agent A 发起一个面向执行 agent B 的 request，例如索要中间 artifact、字段解释、source map、schema、接口约定或其他由 B 持有的输出。A 不需要先请示主 agent。</p>
+            <p><strong>统一通道：</strong>A 把 request 写入 <code>dependency_requests.jsonl</code>，其中包含 requester、target agent、需要的输出和截止时间。coordinator 登记、去重并路由给 B；B 把 response 和 artifact pointer 写入 <code>dependency_responses.jsonl</code>；coordinator 再关联回原 request 并通知 A 继续。</p>
+            <p><strong>即时消息的地位：</strong>如果运行环境支持直接消息，可以用它提醒 B，但统一文件队列才是 source of truth，不能用不可追踪的 A/B 私聊替代。普通 request 不需要占用主 agent 上下文。</p>
+            <p><strong>其他介入场景：</strong>多个 agent 互相等待、共享同一 schema 或术语、请求重复、合同版本变化，或出现循环依赖时。</p>
             <p><strong>持续维护：</strong><code>dependency_requests.jsonl</code>、等待关系、<code>dependency_graph.md</code>、共享合同版本和阻塞状态。</p>
             <p><strong>可以直接处理：</strong>在既有 scope 和 owner 不变的前提下，路由答复、合并重复请求、提醒受影响 agent、维护共享合同索引。</p>
             <p><strong>必须升级：</strong>需要改变 scope、owner、证据权威、用户授权或 Gate 决定时，只压缩成升级包交给主 agent。</p>
@@ -589,6 +645,73 @@
         <div class="callout danger" style="margin-top: 16px;">
           <strong>最重要的边界：</strong>dependency-coordinator 让运行中的关系不堵塞，handoff-steward 让已经建立的状态不丢失；
           两者都不接受成果、不裁决证据冲突，也不替主 agent 做 Gate 决定。
+        </div>
+        <h3 style="margin-top: 28px;">Wave 内事件统一怎么走</h3>
+        <p class="section-intro">
+          skill 不要求 agent 临场猜该找谁，而是先给事件分类，再进入唯一的记录入口。完整规则位于
+          <code>references/wave-interaction-protocol.md</code>。
+        </p>
+        <div class="table-scroll">
+        <table class="role-table routing-table">
+          <thead>
+            <tr>
+              <th>Wave 内发生什么</th>
+              <th>统一记录入口</th>
+              <th>第一责任角色</th>
+              <th>什么时候升级</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Agent A 向 Agent B 请求输出</td>
+              <td><code>dependency_requests.jsonl</code> / <code>dependency_responses.jsonl</code></td>
+              <td>dependency-coordinator</td>
+              <td>触及 scope、owner、证据权威、授权或 Gate</td>
+            </tr>
+            <tr>
+              <td>多个 agent 共用 schema、source map 或术语</td>
+              <td><code>shared_contracts/</code> 和 <code>dependency_graph.md</code></td>
+              <td>合同 owner + dependency-coordinator</td>
+              <td>没有 owner、版本冲突或影响已接受成果</td>
+            </tr>
+            <tr>
+              <td>工作包准备好接受独立审查</td>
+              <td><code>review_queue.jsonl</code></td>
+              <td>reviewer</td>
+              <td>缺少证据、权威冲突或需要 scope 决定</td>
+            </tr>
+            <tr>
+              <td>reviewer 要求返工</td>
+              <td><code>rework_queue.jsonl</code></td>
+              <td>原 artifact owner</td>
+              <td>预算耗尽、需要换 owner 或属于系统性问题</td>
+            </tr>
+            <tr>
+              <td>缺文件、数据、日志、授权或用户决定</td>
+              <td><code>source_requests.jsonl</code> 和 <code>gap_ledger.md</code></td>
+              <td>evidence owner</td>
+              <td>需要用户行动、授权或 Gate 接受限制</td>
+            </tr>
+            <tr>
+              <td>agent 对证据含义、机制或计算有冲突</td>
+              <td><code>dependency_conflicts.md</code></td>
+              <td>reviewer</td>
+              <td>影响权威、接受状态或下游计划</td>
+            </tr>
+            <tr>
+              <td>重复请求、循环等待或 stale blocker</td>
+              <td>依赖队列和 <code>dependency_graph.md</code></td>
+              <td>dependency-coordinator</td>
+              <td>必须改变 scope、owner 或请求用户输入</td>
+            </tr>
+            <tr>
+              <td>Gate、暂停、恢复或跨会话续接</td>
+              <td><code>gate_log.md</code>、<code>handoff.md</code>、<code>recovery_log.md</code></td>
+              <td>主 agent + handoff-steward</td>
+              <td>需要用户决定或授权</td>
+            </tr>
+          </tbody>
+        </table>
         </div>
       </div>
     </section>

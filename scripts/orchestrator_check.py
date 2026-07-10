@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import json
 import os
+import re
 import sys
 import tomllib
 from datetime import datetime, timezone
@@ -55,7 +56,7 @@ QUEUE_CLOSED_STATES = TERMINAL_STATES | {
     "accepted_limitation",
     "carried_forward",
 }
-APPROVED_CUSTOM_AGENTS = {
+BUNDLED_REFERENCE_AGENTS = {
     "handoff-steward",
     "evidence-analyst",
     "output-synthesizer",
@@ -63,8 +64,21 @@ APPROVED_CUSTOM_AGENTS = {
     "visual-producer",
     "visual-skill-maintainer",
 }
-OPTIONAL_CUSTOM_AGENTS = {
+CONDITIONAL_REFERENCE_AGENTS = {
     "dependency-coordinator",
+}
+STANDARD_AGENT_TYPES = {"explorer", "worker", "default"}
+STANDARD_ROLE_PROVIDER_MAP = {
+    "handoff-steward": {"default"},
+    "dependency-coordinator": {"default"},
+    "wave0-discovery": {"explorer", "default"},
+    "evidence-analyst": {"explorer", "default"},
+    "reviewer": {"explorer", "default"},
+    "code-implementer": {"worker"},
+    "data-analyst": {"worker", "default"},
+    "output-synthesizer": {"worker", "default"},
+    "visual-producer": {"worker", "default"},
+    "visual-skill-maintainer": {"worker"},
 }
 QUEUE_NAMES = [
     "dependency_requests.jsonl",
@@ -173,11 +187,28 @@ def artifact_paths(root, artifact):
         paths.append(legacy)
     return paths
 
+def inspect_custom_agent(agent_root, name):
+    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9._-]+", name):
+        return "invalid_name"
+    path = agent_root / f"{name}.toml"
+    if not path.exists():
+        return "missing"
+    try:
+        data = path.read_bytes()
+        if data.startswith(b"\xef\xbb\xbf"):
+            return "bom_present"
+        parsed = tomllib.loads(data.decode("utf-8"))
+        if parsed.get("name") != name:
+            return f"name_mismatch:{parsed.get('name')}"
+        return "ok"
+    except Exception as exc:
+        return f"parse_error:{exc}"
+
 def inspect_custom_agents(state):
     policy = state.get("custom_agent_policy", {})
-    approved = set(policy.get("approved_custom_agents", [])) or APPROVED_CUSTOM_AGENTS
-    optional = set(policy.get("optional_custom_agents", [])) or OPTIONAL_CUSTOM_AGENTS
-    all_known = approved | optional
+    bundled = set(policy.get("bundled_reference_agents", policy.get("approved_custom_agents", []))) or BUNDLED_REFERENCE_AGENTS
+    conditional = set(policy.get("conditionally_activated_reference_agents", policy.get("optional_custom_agents", []))) or CONDITIONAL_REFERENCE_AGENTS
+    all_known = bundled | conditional
     agent_dir = policy.get("authoritative_agent_dir", "$CODEX_HOME/agents")
     if agent_dir in {"$CODEX_HOME/agents", "%CODEX_HOME%/agents"}:
         codex_home = os.environ.get("CODEX_HOME")
@@ -186,23 +217,9 @@ def inspect_custom_agents(state):
         root = Path(os.path.expandvars(agent_dir)).expanduser()
     findings = {}
     for name in sorted(all_known):
-        path = root / f"{name}.toml"
-        if not path.exists():
-            findings[name] = "missing_optional" if name in optional else "missing"
-            continue
-        try:
-            data = path.read_bytes()
-            if data.startswith(b"\xef\xbb\xbf"):
-                findings[name] = "bom_present"
-                continue
-            parsed = tomllib.loads(data.decode("utf-8"))
-            if parsed.get("name") != name:
-                findings[name] = f"name_mismatch:{parsed.get('name')}"
-            else:
-                findings[name] = "ok"
-        except Exception as exc:
-            findings[name] = f"parse_error:{exc}"
-    return approved, optional, findings
+        result = inspect_custom_agent(root, name)
+        findings[name] = "missing_optional" if result == "missing" and name in conditional else result
+    return findings, root
 
 def fmt_age(value):
     return "unknown" if value is None else f"{value:.1f}"
@@ -221,8 +238,7 @@ def main():
     depth_rework_budget = coerce_count(rework_budgets.get("depth_rework", 4))
     gap_closure_budget = coerce_count(rework_budgets.get("gap_closure_attempt", 3))
     persistent_agents = state.get("persistent_agents", ["main-agent", "handoff-steward"])
-    approved_custom_agents, optional_custom_agents, custom_agent_findings = inspect_custom_agents(state)
-    known_custom_agents = approved_custom_agents | optional_custom_agents | {"main-agent"}
+    custom_agent_findings, custom_agent_root = inspect_custom_agents(state)
     now = datetime.now(timezone.utc)
     print("# Loop Orchestrator Dashboard")
     print(f"root: {root}")
@@ -245,8 +261,13 @@ def main():
     model_downgrade = []
     bad_persistent_lifecycle = []
     terminal_wave_agent_without_release = []
-    unapproved_custom_agents = []
-    active_optional_custom_agents = set()
+    invalid_standard_providers = []
+    invalid_provider_kinds = []
+    missing_role_bindings = []
+    missing_binding_rationales = []
+    incompatible_standard_bindings = []
+    active_custom_agents = set()
+    active_role_bindings = set()
     ready_review_without_queue = []
     rework_without_queue = []
     gap_declared_without_gap_id = []
@@ -296,12 +317,36 @@ def main():
         if path.stem in persistent_agents and data.get("lifecycle") != "persistent":
             bad_persistent_lifecycle.append(path.stem)
         custom_agent = data.get("custom_agent", "")
-        if custom_agent in optional_custom_agents:
-            active_optional_custom_agents.add(custom_agent)
-        if custom_agent == "dependency-coordinator" and data.get("lifecycle") != "persistent":
+        provider_kind = data.get("provider_kind", "")
+        if not provider_kind:
+            if path.stem == "main-agent" or custom_agent == "main-agent":
+                provider_kind = "main"
+            elif custom_agent in STANDARD_AGENT_TYPES:
+                provider_kind = "standard"
+            elif custom_agent:
+                provider_kind = "custom"
+        agent_type = data.get("agent_type", custom_agent)
+        role_binding = data.get("role_binding", custom_agent or path.stem)
+        active_role_bindings.add(role_binding)
+        binding_rationale = str(data.get("binding_rationale", "")).strip()
+        if provider_kind not in {"main", "custom", "standard"}:
+            invalid_provider_kinds.append(f"{path.stem}:{provider_kind or '(missing)'}")
+        if not str(role_binding).strip():
+            missing_role_bindings.append(path.stem)
+        if provider_kind in {"custom", "standard"} and not binding_rationale:
+            missing_binding_rationales.append(path.stem)
+        if provider_kind == "custom":
+            if custom_agent not in custom_agent_findings:
+                custom_agent_findings[custom_agent] = inspect_custom_agent(custom_agent_root, custom_agent)
+            active_custom_agents.add(custom_agent)
+        if provider_kind == "standard" and agent_type not in STANDARD_AGENT_TYPES:
+            invalid_standard_providers.append(f"{path.stem}:{agent_type or '(missing)'}")
+        allowed_standard_types = STANDARD_ROLE_PROVIDER_MAP.get(role_binding)
+        if provider_kind == "standard" and allowed_standard_types and agent_type not in allowed_standard_types:
+            allowed = "|".join(sorted(allowed_standard_types))
+            incompatible_standard_bindings.append(f"{path.stem}:{role_binding}->{agent_type} (allowed={allowed})")
+        if role_binding == "dependency-coordinator" and data.get("lifecycle") != "persistent":
             activated_dependency_coordinator_wrong_lifecycle.append(path.stem)
-        if custom_agent and custom_agent not in known_custom_agents:
-            unapproved_custom_agents.append(f"{path.stem}:{custom_agent}")
         lifecycle = data.get("lifecycle", "")
         wave_id = data.get("wave_id", "")
         subwave_id = data.get("subwave_id", "")
@@ -335,9 +380,9 @@ def main():
                 count = coerce_count(count_value)
                 if gap_closure_budget and count > gap_closure_budget:
                     rework_over_budget.append(f"{path.stem}:gap_closure_attempts[{gap_id}]={count}>{gap_closure_budget}")
-        print(f"- {path.stem}: health={health}; state={state_name}; role={role}; custom_agent={custom_agent}; lifecycle={lifecycle}; wave={wave_id}; subwave={subwave_id}; release={release_status}; profile={profile}; effort={effort}; latest_age_min={fmt_age(latest_age)}; next={data.get('next_step','')}")
+        print(f"- {path.stem}: health={health}; state={state_name}; role={role}; role_binding={role_binding}; provider_kind={provider_kind}; agent_type={agent_type}; custom_agent={custom_agent}; lifecycle={lifecycle}; wave={wave_id}; subwave={subwave_id}; release={release_status}; profile={profile}; effort={effort}; latest_age_min={fmt_age(latest_age)}; next={data.get('next_step','')}")
     print("")
-    print("## Custom Agent Configs")
+    print("## Optional Custom Agent Inventory")
     for name, result in custom_agent_findings.items():
         print(f"- {name}: {result}")
     print("")
@@ -419,26 +464,32 @@ def main():
     ]
     if invalid_queues:
         warnings.append(f"invalid_queue_json: {', '.join(invalid_queues)}")
-    missing_or_invalid_custom_agents = []
-    for name, result in custom_agent_findings.items():
-        if result == "ok":
-            continue
-        if result == "missing_optional" and name not in active_optional_custom_agents:
-            continue
-        missing_or_invalid_custom_agents.append(f"{name}:{result}")
+    missing_or_invalid_custom_agents = [
+        f"{name}:{custom_agent_findings.get(name, 'missing')}"
+        for name in sorted(active_custom_agents)
+        if custom_agent_findings.get(name) != "ok"
+    ]
     if missing_or_invalid_custom_agents:
         warnings.append(f"custom_agent_config_not_ready: {', '.join(missing_or_invalid_custom_agents)}")
-    if unapproved_custom_agents:
-        warnings.append(f"unapproved_custom_agent_in_status: {', '.join(unapproved_custom_agents)}")
+    if invalid_standard_providers:
+        warnings.append(f"invalid_standard_agent_type: {', '.join(invalid_standard_providers)}")
+    if invalid_provider_kinds:
+        warnings.append(f"invalid_provider_kind: {', '.join(invalid_provider_kinds)}")
+    if missing_role_bindings:
+        warnings.append(f"missing_role_binding: {', '.join(missing_role_bindings)}")
+    if missing_binding_rationales:
+        warnings.append(f"missing_binding_rationale: {', '.join(missing_binding_rationales)}")
+    if incompatible_standard_bindings:
+        warnings.append(f"incompatible_standard_role_binding: {', '.join(incompatible_standard_bindings)}")
     dependency_request_counts = queue_counts.get("dependency_requests.jsonl", {})
     active_dependency_requests = sum(
         count for status, count in dependency_request_counts.items()
         if status not in QUEUE_CLOSED_STATES
     )
-    dependency_coordinator_active = "dependency-coordinator" in active_optional_custom_agents
+    dependency_coordinator_active = "dependency-coordinator" in active_role_bindings
     if active_dependency_requests and not dependency_coordinator_active:
         warnings.append(f"active_dependency_requests_without_coordinator: {active_dependency_requests}")
-    if dependency_coordinator_active and custom_agent_findings.get("dependency-coordinator") != "ok":
+    if "dependency-coordinator" in active_custom_agents and custom_agent_findings.get("dependency-coordinator") != "ok":
         warnings.append(f"dependency_coordinator_config_not_ready: {custom_agent_findings.get('dependency-coordinator', 'missing')}")
     if active_dependency_requests and not (root / "dependency_graph.md").exists():
         warnings.append("active_dependency_requests_missing_dependency_graph")
